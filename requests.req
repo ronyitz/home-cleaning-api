@@ -1,0 +1,12 @@
+@baseUrl = http://localhost:3000
+
+### Get all rooms
+GET {{baseUrl}}/api/rooms
+
+### Create a room
+POST {{baseUrl}}/api/rooms
+Content-Type: application/json
+
+{
+  "name": "Bathroom"
+}
