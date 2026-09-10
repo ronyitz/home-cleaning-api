@@ -6,6 +6,7 @@ const roomRoutes = require("./routes/roomRoutes");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const authenticate = require("./middleware/auth");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
@@ -24,11 +25,15 @@ app.get("/", (req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+// Use authentication middleware for all routes except /api/auth
 const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
 const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next();
 
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
+
+// Error handling middleware
+app.use(errorHandler);
 
 module.exports = app;
