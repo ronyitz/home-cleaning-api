@@ -7,6 +7,9 @@ const roomSchema = new mongoose.Schema(
       required: true,
       unique: true
     },
+    type: {
+      type: String,
+    },
   },
   { timestamps: true, collection: "rooms" }
 );

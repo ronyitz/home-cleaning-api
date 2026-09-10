@@ -3,7 +3,7 @@ const Room = require("../models/Room");
 // POST /api/rooms
 async function createRoom(req, res) {
   try {
-    const room = await Room.create({ name: req.body.name });
+    const room = await Room.create({ name: req.body.name, type: req.body.type });
     res.status(201).json(room);
   } catch (error) {
     if (error.code === 11000) {
@@ -41,7 +41,7 @@ async function updateRoom(req, res) {
   try {
     const room = await Room.findByIdAndUpdate(
       req.params.id,
-      { name: req.body.name },
+      { name: req.body.name, type: req.body.type },
       { new: true, runValidators: true }
     );
     if (!room) {

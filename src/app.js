@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 const roomRoutes = require("./routes/roomRoutes");
@@ -8,6 +9,11 @@ const authenticate = require("./middleware/auth");
 
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
+  : ["http://localhost:5174"];
+
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -18,8 +24,11 @@ app.get("/", (req, res) => {
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use("/api/rooms", authenticate, roomRoutes);
-app.use("/api/tasks", authenticate, taskRoutes);
+const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
+const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next();
+
+app.use("/api/rooms", authMiddleware, roomRoutes);
+app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
 
 module.exports = app;

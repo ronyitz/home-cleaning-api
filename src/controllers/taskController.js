@@ -25,7 +25,16 @@ async function completeTask(req, res) {
 // GET /api/tasks
 async function getTasks(req, res) {
   try {
-    const tasks = await Task.find();
+    const filter = {};
+    if (req.query.maxNextDays) {
+      filter.nextDueAt = { $lte: new Date(Date.now() + Number(req.query.maxNextDays) * DAY_IN_MS) };
+    }
+
+    const query = Task.find(filter);
+    if (req.query.sortByNextDue === "true") {
+      query.sort({ nextDueAt: 1 });
+    }
+    const tasks = await query;
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -58,7 +67,7 @@ async function createTask(req, res) {
     if (status === "good") {
       daysUntilDue = frequency;
     } else if (status === "middle") {
-      daysUntilDue = frequency / 2;
+      daysUntilDue = Math.ceil(frequency / 2);
     } else if (status === "bad") {
       daysUntilDue = 0;
     } else {
