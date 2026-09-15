@@ -18,7 +18,7 @@ async function login(req, res) {
     }
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1d",
+      expiresIn: "180d",
     });
 
     res.json({ token });
@@ -27,4 +27,21 @@ async function login(req, res) {
   }
 }
 
-module.exports = { login };
+// GET /api/auth/verify
+async function verify(req, res) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.json({ valid: false });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    res.json({ valid: true, userId: decoded.userId });
+  } catch (error) {
+    res.json({ valid: false });
+  }
+}
+
+module.exports = { login, verify };

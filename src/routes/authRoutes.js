@@ -1,5 +1,5 @@
 const express = require("express");
-const { login } = require("../controllers/authController");
+const { login, verify } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -35,5 +35,6 @@ const router = express.Router();
  *         description: Invalid email or password
  */
 router.post("/login", login);
+router.get("/verify", verify);
 
 module.exports = router;

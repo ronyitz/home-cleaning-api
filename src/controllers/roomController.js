@@ -1,11 +1,17 @@
 const Room = require("../models/Room");
 const ApiError = require("../utils/ApiError");
+const ROOM_TYPES = require("../constants/roomTypes");
 
 
 // GET /api/rooms
 async function getRooms(req, res) {
   const rooms = await Room.find();
   res.json(rooms);
+}
+
+// GET /api/rooms/types
+async function getRoomTypes(req, res) {
+  res.json(ROOM_TYPES);
 }
 
 // POST /api/rooms
@@ -36,4 +42,6 @@ async function updateRoom(req, res) {
   res.json(room);
 }
 
-module.exports = { createRoom, getRooms, deleteRoom, updateRoom };
+
+
+module.exports = { createRoom, getRooms, getRoomTypes, deleteRoom, updateRoom };

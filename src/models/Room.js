@@ -5,10 +5,13 @@ const roomSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true
+      unique: true,
+      minlength: 1,
     },
     type: {
       type: String,
+      required: true,
+      enum: ["living_room", "kitchen","office", "bedroom", "other"],
     },
   },
   { timestamps: true, collection: "rooms" }

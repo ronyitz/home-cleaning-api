@@ -1,5 +1,6 @@
 const express = require("express");
-const { createRoom, getRooms, deleteRoom, updateRoom } = require("../controllers/roomController");
+const { createRoom, getRooms, getRoomTypes, deleteRoom, updateRoom } = require("../controllers/roomController");
+const { validateRoom, validateObjectIdParam } = require("../middleware/validate");
 
 const router = express.Router();
 
@@ -31,8 +32,10 @@ const router = express.Router();
  *       200:
  *         description: List of rooms
  */
-router.post("/", createRoom);
+router.post("/", validateRoom, createRoom);
+router.put("/:id", validateObjectIdParam("id"), validateRoom, updateRoom);
 router.get("/", getRooms);
+router.get("/types", getRoomTypes);
 
 /**
  * @swagger
@@ -77,7 +80,6 @@ router.get("/", getRooms);
  *       409:
  *         description: Room name already exists
  */
-router.delete("/:id", deleteRoom);
-router.put("/:id", updateRoom);
+router.delete("/:id", validateObjectIdParam("id"), deleteRoom);
 
 module.exports = router;

@@ -22,8 +22,14 @@ const TaskSchema = new mongoose.Schema(
     nextDueAt: {
       type: Date,
     },
+    status: {
+      type: String,
+      enum: ["good", "middle", "bad"],
+    },
   },
   { timestamps: true }
 );
+
+TaskSchema.index({ room: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("Task", TaskSchema);

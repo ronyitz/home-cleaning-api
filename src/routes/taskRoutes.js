@@ -1,5 +1,6 @@
 const express = require("express");
 const { createTask, getTasks, getTasksPerRoom,completeTask, deleteTask, updateTask } = require("../controllers/taskController");
+const { validateTask, validateObjectIdParam } = require("../middleware/validate");
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ const router = express.Router();
  *         description: Room not found
  */
 router.get("/", getTasks);
-router.post("/", createTask);
+router.post("/", validateTask, createTask);
 
 /**
  * @swagger
@@ -59,7 +60,7 @@ router.post("/", createTask);
  *       200:
  *         description: List of tasks for the room
  */
-router.get("/room/:roomId", getTasksPerRoom);
+router.get("/room/:roomId", validateObjectIdParam("roomId"), getTasksPerRoom);
 
 /**
  * @swagger
@@ -79,7 +80,7 @@ router.get("/room/:roomId", getTasksPerRoom);
  *       404:
  *         description: Task not found
  */
-router.patch("/:taskId/complete", completeTask);
+router.patch("/:taskId/complete", validateObjectIdParam("taskId"), completeTask);
 
 /**
  * @swagger
@@ -128,7 +129,7 @@ router.patch("/:taskId/complete", completeTask);
  *       404:
  *         description: Task not found
  */
-router.delete("/:taskId", deleteTask);
-router.put("/:taskId", updateTask);
+router.delete("/:taskId", validateObjectIdParam("taskId"), deleteTask);
+router.put("/:taskId", validateObjectIdParam("taskId"), validateTask, updateTask);
 
 module.exports = router;
