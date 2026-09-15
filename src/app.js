@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const authenticate = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
-const { rateLimiter, requests } = require("./middleware/rateLimiter");
+const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
 
 const app = express();
 
@@ -26,13 +26,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
 const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next();
 
-app.use(rateLimiter);
+app.use(rateLimiterRedis);
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
-app.get("/debug/rate-limit", (req, res) => {
-  res.json(Object.fromEntries(requests));
-});
 // Error handling middleware
 app.use(errorHandler);
 
