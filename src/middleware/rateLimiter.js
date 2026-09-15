@@ -63,4 +63,4 @@ function getClientIp(req) {
   return req.headers["cf-connecting-ip"] || req.ip;
 }
 
-module.exports = rateLimiter;
+module.exports = { rateLimiter, requests };

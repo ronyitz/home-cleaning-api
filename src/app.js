@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const authenticate = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
-const rateLimiter = require("./middleware/rateLimiter");
+const { rateLimiter, requests } = require("./middleware/rateLimiter");
 
 const app = express();
 
@@ -30,7 +30,9 @@ app.use(rateLimiter);
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
-
+app.get("/debug/rate-limit", (req, res) => {
+  res.json(Object.fromEntries(requests));
+});
 // Error handling middleware
 app.use(errorHandler);
 
