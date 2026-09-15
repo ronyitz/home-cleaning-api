@@ -33,6 +33,7 @@ app.get("/debug/ip", (req, res) => {
     ips: req.ips,
     forwardedFor: req.headers["x-forwarded-for"],
     remoteAddress: req.socket.remoteAddress,
+    cfConnectingIp: req.headers["cf-connecting-ip"]
   });
 });
 
