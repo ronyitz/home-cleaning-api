@@ -12,7 +12,7 @@ const errorHandler = require("./middleware/errorHandler");
 const app = express();
 
 // Trust the first proxy hop (Render's load balancer) so req.ip reflects the real client IP.
-// app.set("trust proxy", 1);
+app.set("trust proxy", 1);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
