@@ -11,6 +11,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    household: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Household",
+    },
+    role: {
+      type: String,
+      enum: ["admin", "user"],
+      default: "user",
+    },
   },
   { timestamps: true }
 );

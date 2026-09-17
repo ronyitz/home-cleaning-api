@@ -1,5 +1,5 @@
 const express = require("express");
-const { login, verify } = require("../controllers/authController");
+const { signup, login, verify } = require("../controllers/authController");
 
 const router = express.Router();
 
@@ -34,6 +34,7 @@ const router = express.Router();
  *       401:
  *         description: Invalid email or password
  */
+router.post("/signup", signup);
 router.post("/login", login);
 router.get("/verify", verify);
 

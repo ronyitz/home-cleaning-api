@@ -18,19 +18,19 @@ async function completeTask(req, res) {
   res.json(task);
 }
 
-// GET /api/tasks
+// GET /api/tasks/:household
 async function getTasks(req, res) {
+  if (!req.params.household) {
+    throw new ApiError(422, "household is required and must be a string");
+  }
 
-  const filter = {};
+  const rooms = await Room.find({ household: req.params.household }, "_id");
+  const filter = { room: { $in: rooms.map((r) => r._id) } };
   if (req.query.maxNextDays) {
     filter.nextDueAt = { $lte: new Date(Date.now() + Number(req.query.maxNextDays) * DAY_IN_MS) };
   }
 
-  const query = Task.find(filter).populate("room");
-  if (req.query.sortByNextDue === "true") {
-    query.sort({ nextDueAt: 1 });
-  }
-  const tasks = await query;
+  const tasks = await Task.find(filter).populate("room");
   tasks.sort((a, b) => a.nextDueAt - b.nextDueAt);
   tasks.sort((a, b) => a.room.createdAt - b.room.createdAt);
   res.json(tasks);
@@ -65,6 +65,7 @@ async function createTask(req, res) {
     room,
     frequency,
     nextDueAt: new Date(Date.now() + daysUntilDue * DAY_IN_MS),
+    note,
   });
   res.status(201).json(task);
 }
@@ -80,7 +81,7 @@ async function deleteTask(req, res) {
 
 // PUT /api/tasks/:taskId
 async function updateTask(req, res) {
-  const { name, room, frequency, lastCompletedAt } = req.body;
+  const { name, room, frequency, lastCompletedAt, note } = req.body;
 
   const existingTask = await Task.findById(req.params.taskId);
   if (!existingTask) {
@@ -102,7 +103,7 @@ async function updateTask(req, res) {
 
   const task = await Task.findByIdAndUpdate(
     req.params.taskId,
-    { name, room, frequency, lastCompletedAt, nextDueAt },
+    { name, room, frequency, lastCompletedAt, nextDueAt, note },
     { new: true, runValidators: true }
   );
   res.json(task);

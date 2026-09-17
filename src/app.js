@@ -26,7 +26,10 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
 const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next();
 
-app.use(rateLimiterRedis);
+const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
+if (RATE_LIMIT_ENABLED) {
+  app.use(rateLimiterRedis);
+}
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);

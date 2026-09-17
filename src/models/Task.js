@@ -26,6 +26,9 @@ const TaskSchema = new mongoose.Schema(
       type: String,
       enum: ["good", "middle", "bad"],
     },
+    note: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

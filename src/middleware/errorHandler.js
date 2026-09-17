@@ -9,7 +9,7 @@ function errorHandler(err, req, res, next) {
   
   // MongoDB duplicate key
   if (err.code === 11000) {
-    return sendError(res, 409, "duplicated, already exists");
+    return sendError(res, 409, "duplicated, already exists", err.message);
   }
 
   // Mongoose validation error

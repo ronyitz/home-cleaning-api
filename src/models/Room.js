@@ -1,4 +1,7 @@
 const mongoose = require("mongoose");
+const ROOM_TYPES = require("../constants/roomTypes");
+
+const ROOM_TYPE_VALUES = ROOM_TYPES.map((t) => t.value);
 
 const roomSchema = new mongoose.Schema(
   {
@@ -11,9 +14,15 @@ const roomSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["living_room", "kitchen","office", "bedroom", "other"],
+      enum: ROOM_TYPE_VALUES,
+    },
+    household: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Household",
+      required: true,
     },
   },
+
   { timestamps: true, collection: "rooms" }
 );
 

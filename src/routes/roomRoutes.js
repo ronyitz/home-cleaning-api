@@ -34,8 +34,8 @@ const router = express.Router();
  */
 router.post("/", validateRoom, createRoom);
 router.put("/:id", validateObjectIdParam("id"), validateRoom, updateRoom);
-router.get("/", getRooms);
 router.get("/types", getRoomTypes);
+router.get("/:household", getRooms);
 
 /**
  * @swagger

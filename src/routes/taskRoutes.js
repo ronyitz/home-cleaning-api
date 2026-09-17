@@ -41,7 +41,7 @@ const router = express.Router();
  *       404:
  *         description: Room not found
  */
-router.get("/", getTasks);
+router.get("/:household", getTasks);
 router.post("/", validateTask, createTask);
 
 /**
