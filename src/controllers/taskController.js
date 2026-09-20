@@ -65,7 +65,6 @@ async function createTask(req, res) {
     room,
     frequency,
     nextDueAt: new Date(Date.now() + daysUntilDue * DAY_IN_MS),
-    note,
   });
   res.status(201).json(task);
 }
