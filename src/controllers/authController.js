@@ -6,8 +6,8 @@ const ApiError = require("../utils/ApiError");
 const { createUser } = require("./userController");
 const generateInviteCode = require("../utils/generateInviteCode");
 
-function signToken(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "180d" });
+function signToken(userId, householdId) {
+  return jwt.sign({ userId, householdId }, process.env.JWT_SECRET, { expiresIn: "180d" });
 }
 
 // POST /api/auth/signup
@@ -41,7 +41,7 @@ async function signup(req, res) {
     user.role = "admin";
     await user.save();
 
-    return res.status(201).json({ token: signToken(user._id), inviteCode: household.inviteCode, household: household._id });
+    return res.status(201).json({ token: signToken(user._id, household._id), inviteCode: household.inviteCode, household: household._id });
   }else if(inviteCode && typeof inviteCode === "string") {
     // Joining an existing household
     const household = await Household.findOne({ inviteCode });
@@ -53,10 +53,9 @@ async function signup(req, res) {
     household.members.push(user._id);
     await household.save();
 
-    user.household = household._id;
     await user.save();
 
-    return res.status(201).json({ token: signToken(user._id), household: household._id });
+    return res.status(201).json({ token: signToken(user._id, household._id), household: household._id });
   }else{
   throw new ApiError(422, "groupName or inviteCode is required");
 
@@ -83,7 +82,7 @@ async function login(req, res) {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-
+    
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
@@ -92,18 +91,20 @@ async function login(req, res) {
     if (!passwordMatches) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
-
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    
+    const household = user.household ? await Household.findById(user.household) : null;
+    const token = jwt.sign({ userId: user._id, householdId: household._id }, process.env.JWT_SECRET, {
       expiresIn: "180d",
     });
 
-    const household = user.household ? await Household.findById(user.household) : null;
+    
     const isAdmin = user.role === "admin";
 
     res.json({
       token,
       household: user.household,
       householdName: household.name,
+      isAdmin: isAdmin,
       inviteCode: isAdmin && household ? household.inviteCode : null,
     });
   } catch (error) {

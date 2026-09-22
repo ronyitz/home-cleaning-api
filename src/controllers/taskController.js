@@ -44,7 +44,7 @@ async function getTasksPerRoom(req, res) {
 
 // POST /api/tasks
 async function createTask(req, res) {
-  const { name, room, frequency, status } = req.body;
+  const { name, room, frequency, status, note } = req.body;
 
   const roomExists = await Room.findById(room);
   if (!roomExists) {
@@ -65,6 +65,7 @@ async function createTask(req, res) {
     room,
     frequency,
     nextDueAt: new Date(Date.now() + daysUntilDue * DAY_IN_MS),
+    note,
   });
   res.status(201).json(task);
 }
@@ -80,18 +81,11 @@ async function deleteTask(req, res) {
 
 // PUT /api/tasks/:taskId
 async function updateTask(req, res) {
-  const { name, room, frequency, lastCompletedAt, note } = req.body;
+  const { name, frequency, lastCompletedAt, note } = req.body;
 
   const existingTask = await Task.findById(req.params.taskId);
   if (!existingTask) {
     throw new ApiError(404, "Task not found");
-  }
-
-  if (room) {
-    const roomExists = await Room.findById(room);
-    if (!roomExists) {
-      throw new ApiError(404, "Room not found");
-    }
   }
 
   const effectiveFrequency = frequency ?? existingTask.frequency;
@@ -102,7 +96,7 @@ async function updateTask(req, res) {
 
   const task = await Task.findByIdAndUpdate(
     req.params.taskId,
-    { name, room, frequency, lastCompletedAt, nextDueAt, note },
+    { name, frequency, lastCompletedAt, nextDueAt, note },
     { new: true, runValidators: true }
   );
   res.json(task);

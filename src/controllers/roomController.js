@@ -38,7 +38,7 @@ async function createMultipleTasksForNewRoom(room, tasks) {
 
 // POST /api/rooms
 async function createRoom(req, res) {
-  const room = await Room.create({ name: req.body.name, type: req.body.type, household: req.body.household } );
+  const room = await Room.create({ name: req.body.name, type: req.body.type, household: req.householdId } );
   if (room) {
     await createMultipleTasksForNewRoom(room, req.body.tasks);
   }

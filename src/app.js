@@ -5,7 +5,7 @@ const swaggerSpec = require("./swagger");
 const roomRoutes = require("./routes/roomRoutes");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
-const authenticate = require("./middleware/auth");
+const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
 
@@ -24,7 +24,8 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Use authentication middleware for all routes except /api/auth
 const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
-const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next();
+const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next()
+
 
 const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
 if (RATE_LIMIT_ENABLED) {

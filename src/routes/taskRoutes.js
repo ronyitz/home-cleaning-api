@@ -1,6 +1,7 @@
 const express = require("express");
 const { createTask, getTasks, getTasksPerRoom,completeTask, deleteTask, updateTask } = require("../controllers/taskController");
-const { validateTask, validateObjectIdParam } = require("../middleware/validate");
+const { validateCreateTask, validateUpdateTask, validateObjectIdParam } = require("../middleware/validate");
+const { requireSameHousehold, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold} = require("../middleware/auth");
 
 const router = express.Router();
 
@@ -41,8 +42,8 @@ const router = express.Router();
  *       404:
  *         description: Room not found
  */
-router.get("/:household", getTasks);
-router.post("/", validateTask, createTask);
+router.get("/:household",requireSameHousehold, getTasks);
+router.post("/", validateCreateTask, requireHouseholdRoomForCreateTask, createTask);
 
 /**
  * @swagger
@@ -60,7 +61,7 @@ router.post("/", validateTask, createTask);
  *       200:
  *         description: List of tasks for the room
  */
-router.get("/room/:roomId", validateObjectIdParam("roomId"), getTasksPerRoom);
+router.get("/room/:roomId", validateObjectIdParam("roomId"), requireHouseholdRoomGetTasks, getTasksPerRoom);
 
 /**
  * @swagger
@@ -80,7 +81,7 @@ router.get("/room/:roomId", validateObjectIdParam("roomId"), getTasksPerRoom);
  *       404:
  *         description: Task not found
  */
-router.patch("/:taskId/complete", validateObjectIdParam("taskId"), completeTask);
+router.patch("/:taskId/complete", validateObjectIdParam("taskId"), requireTaskHousehold, completeTask);
 
 /**
  * @swagger
@@ -129,7 +130,7 @@ router.patch("/:taskId/complete", validateObjectIdParam("taskId"), completeTask)
  *       404:
  *         description: Task not found
  */
-router.delete("/:taskId", validateObjectIdParam("taskId"), deleteTask);
-router.put("/:taskId", validateObjectIdParam("taskId"), validateTask, updateTask);
+router.delete("/:taskId", validateObjectIdParam("taskId"), requireTaskHousehold, deleteTask);
+router.put("/:taskId", validateObjectIdParam("taskId"), requireTaskHousehold, validateUpdateTask, updateTask);
 
 module.exports = router;

@@ -27,7 +27,7 @@ if (!name.trim()) {
   next();
 }
 
-function validateTask(req, res, next) {
+function validateCreateTask(req, res, next) {
   const { name, room, frequency, status } = req.body;
 
   if (!name || typeof name !== "string" || !name.trim()) {
@@ -36,6 +36,24 @@ function validateTask(req, res, next) {
 
   if (!room || !mongoose.Types.ObjectId.isValid(room)) {
     throw new ApiError(422, "room is required and must be a valid id");
+  }
+
+  if (typeof frequency !== "number" || frequency < 1) {
+    throw new ApiError(422, "frequency is required and must be a number >= 1");
+  }
+
+  if (status && !TASK_STATUS_VALUES.includes(status)) {
+    throw new ApiError(422, `status must be one of: ${TASK_STATUS_VALUES.join(", ")}`);
+  }
+
+  next();
+}
+
+function validateUpdateTask(req, res, next) {
+  const { name, frequency, status } = req.body;
+
+  if (!name || typeof name !== "string" || !name.trim()) {
+    throw new ApiError(422, "name is required and must be a non-empty string");
   }
 
   if (typeof frequency !== "number" || frequency < 1) {
@@ -58,4 +76,4 @@ function validateObjectIdParam(paramName) {
   };
 }
 
-module.exports = { validateRoom, validateTask, validateObjectIdParam };
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateObjectIdParam };
