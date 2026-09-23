@@ -44,7 +44,7 @@ async function getTasksPerRoom(req, res) {
 
 // POST /api/tasks
 async function createTask(req, res) {
-  const { name, room, frequency, status, note } = req.body;
+  const { name, room, frequency, status, lastCompletedAt, note } = req.body;
 
   const roomExists = await Room.findById(room);
   if (!roomExists) {
@@ -64,7 +64,8 @@ async function createTask(req, res) {
     name,
     room,
     frequency,
-    nextDueAt: new Date(Date.now() + daysUntilDue * DAY_IN_MS),
+    lastCompletedAt,
+    nextDueAt: new Date(new Date(lastCompletedAt).getTime() + daysUntilDue * DAY_IN_MS),
     note,
   });
   res.status(201).json(task);
