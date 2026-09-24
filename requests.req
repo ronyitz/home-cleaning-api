@@ -1,12 +1,40 @@
-@baseUrl = http://localhost:3000
-
-### Get all rooms
-GET {{baseUrl}}/api/rooms
-
-### Create a room
-POST {{baseUrl}}/api/rooms
-Content-Type: application/json
-
 {
-  "name": "Bathroom"
+  "description": "",
+  "method": "POST",
+  "url": "http://localhost:3000/api/tasks",
+  "params": [],
+  "headers": [
+    {
+      "key": "authorization",
+      "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWFiYmY3NDM0NjZhMGRlYTNkYTE1YjAiLCJob3VzZWhvbGRJZCI6IjZhYWE5MDhiMzg4OGI5MDljODA0M2Q1YSIsImlhdCI6MTc5MDE1OTQzNiwiZXhwIjoxODA1NzExNDM2fQ.jduLlDItlUJACWwl5slKQqjadaKATHQQtHTZdct5-J4",
+      "enabled": true
+    }
+  ],
+  "bodyType": "application/json",
+  "bodyText": "{\"name\":\"paששapp\",\"room\":\"6ab2c5102450450e32d869dc\",\"frequency\":7,\"status\":\"good\",\"lastCompletedAt\":\"2026-09-20T00:00:00.000Z\",\"note\":\"\"}\n",
+  "bodyUrlEncoded": [],
+  "bodyMultipart": [
+    {
+      "key": "",
+      "value": "",
+      "type": "text",
+      "enabled": true
+    }
+  ],
+  "auth": {
+    "type": "none",
+    "bearer": {
+      "token": ""
+    },
+    "basic": {
+      "username": "",
+      "password": ""
+    },
+    "apiKey": {
+      "key": "",
+      "value": "",
+      "addTo": "header"
+    }
+  },
+  "rejectUnauthorized": true
 }
