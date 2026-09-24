@@ -17,6 +17,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
+//update
 describe("GET /api/rooms/:household", () => {
   it("should return 401 without a token", async () => {
     const response = await request(app).get(`/api/rooms/${HOUSEHOLD_ID}`);
