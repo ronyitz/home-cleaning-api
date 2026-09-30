@@ -1,7 +1,7 @@
 const ApiError = require("../utils/ApiError");
 const redisClient = require("../config/redis");
 
-const WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 10 ;
+const WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 10000 ;
 const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 30;
 
 
@@ -14,7 +14,7 @@ async function rateLimiterRedis(req, res, next) {
   const count = await redisClient.incr(key);
 
   if (count === 1) {
-    await redisClient.expire(key, Math.ceil(WINDOW_MS));
+    await redisClient.expire(key, Math.ceil(WINDOW_MS/1000));
   }
 
   if (count > MAX_REQUESTS) {
