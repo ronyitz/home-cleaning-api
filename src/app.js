@@ -5,6 +5,7 @@ const swaggerSpec = require("./swagger");
 const roomRoutes = require("./routes/roomRoutes");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const pushRoutes = require("./routes/pushRoutes");
 const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
@@ -42,6 +43,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/push", authMiddleware, pushRoutes);
 // Error handling middleware
 app.use(errorHandler);
 
