@@ -21,7 +21,7 @@ afterEach(() => {
 describe("GET /api/rooms/:household", () => {
   it("should return 401 without a token", async () => {
     const response = await request(app).get(`/api/rooms/${HOUSEHOLD_ID}`);
-    expect(response.statusCode).toBe(999);
+    expect(response.statusCode).toBe(401);
   });
 
   it("should return 401 with an invalid token", async () => {

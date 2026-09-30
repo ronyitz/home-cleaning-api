@@ -6,7 +6,6 @@ const MAX_REQUESTS = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 30;
 
 
 async function rateLimiterRedis(req, res, next) {
-  await redisClient.flushDb();
   const ip = getClientIp(req);
   const key = `ratelimit:${ip}`;
 
