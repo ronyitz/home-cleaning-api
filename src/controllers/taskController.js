@@ -1,6 +1,7 @@
 const Task = require("../models/Task");
 const Room = require("../models/Room");
 const ApiError = require("../utils/ApiError");
+const { notifyHousehold } = require("../services/pushService");
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -14,6 +15,11 @@ async function completeTask(req, res) {
   task.lastCompletedAt = new Date();
   task.nextDueAt = new Date(Date.now() + task.frequency * DAY_IN_MS);
   await task.save();
+
+  // Fire-and-forget: the response shouldn't wait for push delivery.
+  notifyHousehold({ title: task.name + "הושלמה ", body: "כל הכבוד חמוד!" }).catch((error) =>
+    console.error("Push notification failed:", error)
+  );
 
   res.json(task);
 }
