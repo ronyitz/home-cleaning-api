@@ -12,10 +12,8 @@ async function rateLimiterRedis(req, res, next) {
   // INCR is atomic: it creates the key at 1 if missing, or increments it if it exists —
   // avoids the race condition of separate GET-then-SET calls under concurrent requests.
   const count = await redisClient.incr(key);
-
-  if (count === 1) {
-    await redisClient.expire(key, Math.ceil(WINDOW_MS/1000));
-  }
+  // EXPIRE with NX sets the TTL only if the key has none, so a failed first request can't leave a key that never expires.
+  await redisClient.expire(key, Math.ceil(WINDOW_MS/1000), "NX");
 
   if (count > MAX_REQUESTS) {
     const retryAfterSeconds = await redisClient.ttl(key);
