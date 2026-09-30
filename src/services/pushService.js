@@ -1,12 +1,6 @@
 const webpush = require("web-push");
 const PushSubscription = require("../models/PushSubscription");
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
-
 // Sends a notification to every stored push subscription.
 // Removes subscriptions the push service reports as gone (404/410).
 // Uses the app's existing mongoose connection - never connects/disconnects here.
@@ -25,7 +19,17 @@ async function notifyHousehold(data) {
       const result = await webpush.sendNotification(
         { endpoint: subscription.endpoint, keys: subscription.keys },
         payload,
-        { urgency: "high", TTL: 60 }
+        {
+          urgency: "high",
+          TTL: 60,
+          // Passed per send (not setVapidDetails at load) so requiring this
+          // module doesn't crash when VAPID env vars are missing, e.g. in CI.
+          vapidDetails: {
+            subject: process.env.VAPID_SUBJECT,
+            publicKey: process.env.VAPID_PUBLIC_KEY,
+            privateKey: process.env.VAPID_PRIVATE_KEY,
+          },
+        }
       );
       console.log(`Sent (${result.statusCode}): ${shortEndpoint}...`);
     } catch (error) {
