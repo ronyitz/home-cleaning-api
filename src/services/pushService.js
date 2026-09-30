@@ -4,8 +4,9 @@ const PushSubscription = require("../models/PushSubscription");
 // Sends a notification to every stored push subscription.
 // Removes subscriptions the push service reports as gone (404/410).
 // Uses the app's existing mongoose connection - never connects/disconnects here.
-async function notifyHousehold(data) {
-  const subscriptions = await PushSubscription.find();
+async function notifyHousehold(household, data) {
+  const subscriptions = await PushSubscription.find({ household: household })
+
 
   const payload = JSON.stringify({
     title: data?.title,
