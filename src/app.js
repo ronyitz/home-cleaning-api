@@ -32,8 +32,11 @@ if (RATE_LIMIT_ENABLED) {
   app.use(rateLimiterRedis);
 }
 
-app.get("/api/health", (req, res)=>{
-  res.json({ status: "ok" });
+// GET /api/health — keep-alive ping target; uptime shows whether the server restarted since the last ping.
+app.get("/api/health", (req, res) => {
+  const uptimeSeconds = Math.round(process.uptime());
+  console.log(`Health check — uptime: ${uptimeSeconds}s`);
+  res.json({ status: "ok", uptimeSeconds });
 });
 
 app.use("/api/rooms", authMiddleware, roomRoutes);
