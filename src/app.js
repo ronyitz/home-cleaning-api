@@ -31,6 +31,11 @@ const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
 if (RATE_LIMIT_ENABLED) {
   app.use(rateLimiterRedis);
 }
+
+app.get("/api/health", (req, res)=>{
+  res.json({ status: "ok" });
+});
+
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
 app.use("/api/auth", authRoutes);
