@@ -1,5 +1,6 @@
 const Task = require("../models/Task");
 const Room = require("../models/Room");
+const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const { notifyHousehold } = require("../services/pushService");
 const Household = require("../models/Household");
