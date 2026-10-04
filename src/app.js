@@ -27,18 +27,17 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
 const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next()
 
-
-const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
-if (RATE_LIMIT_ENABLED) {
-  app.use(rateLimiterRedis);
-}
-
 // GET /api/health — keep-alive ping target; uptime shows whether the server restarted since the last ping.
 app.get("/api/health", (req, res) => {
   const uptimeSeconds = Math.round(process.uptime());
   console.log(`Health check — uptime: ${uptimeSeconds}s`);
   res.json({ status: "ok", uptimeSeconds });
 });
+
+const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
+if (RATE_LIMIT_ENABLED) {
+  app.use(rateLimiterRedis);
+}
 
 app.use("/api/rooms", authMiddleware, roomRoutes);
 app.use("/api/tasks", authMiddleware, taskRoutes);
