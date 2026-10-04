@@ -10,7 +10,8 @@ const DAY_IN_MS = 24 * 60 * 60 * 1000;
 async function completeTask(req, res) {
   const task = await Task.findById(req.params.taskId).populate("room");
   const household = await Household.findById(req.householdId);
-  
+  const user = await User.findById(req.userId);
+
   if (!task) {
     throw new ApiError(404, "Task not found");
   }
@@ -20,7 +21,7 @@ async function completeTask(req, res) {
   await task.save();
 
   // Fire-and-forget: the response shouldn't wait for push delivery.
-  notifyHousehold(household._id,{ title: task.room.name + " - " + task.name, body: "המשימה בוצעה על ידי xxx" }).catch((error) =>
+  notifyHousehold(household._id,{ title: task.room.name + " - " + task.name, body: "המשימה בוצעה על ידי " + user.firstName }).catch((error) =>
     console.error("Push notification failed:", error)
   );
 
