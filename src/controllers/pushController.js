@@ -11,6 +11,12 @@ async function postSubscribePush(req, res){
     res.status(200).json(pushSubscription);
 }
 
+async function postUnsubscribe(req, res){
+    const deleteSubscription = await PushSubscription.deleteOne({ endpoint: req.body.endpoint, user: req.userId });
+    res.status(200).json(deleteSubscription);
+}
 
 
-module.exports = { getPublicKey, postSubscribePush };
+
+module.exports = { getPublicKey, postSubscribePush, postUnsubscribe };
+

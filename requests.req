@@ -1,7 +1,7 @@
 {
   "description": "",
   "method": "POST",
-  "url": "http://localhost:3000/api/tasks",
+  "url": "http://localhost:3000/api/push/subscribe",
   "params": [],
   "headers": [
     {
@@ -11,7 +11,7 @@
     }
   ],
   "bodyType": "application/json",
-  "bodyText": "{\"name\":\"paששapp\",\"room\":\"6ab2c5102450450e32d869dc\",\"frequency\":7,\"status\":\"good\",\"lastCompletedAt\":\"2026-09-20T00:00:00.000Z\",\"note\":\"\"}\n",
+  "bodyText": "{\n  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/test-device-1\",\n  \"keys\": {\n    \"p256dh\": \"test-p256dh\",\n    \"auth\": \"test-auth\"\n  }\n}",
   "bodyUrlEncoded": [],
   "bodyMultipart": [
     {

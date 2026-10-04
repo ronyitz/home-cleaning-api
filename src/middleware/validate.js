@@ -81,6 +81,17 @@ function validatePushSubscription(req, res, next) {
   next();
 }
 
+function validateDeleteSubscription(req, res, next) {
+  const { endpoint } = req.body;
+
+  if (!endpoint || typeof endpoint !== "string" || !endpoint.startsWith("https://")) {
+    throw new ApiError(422, "endpoint is required and must be a non-empty string and real endpoint");
+  }
+
+  next();
+}
+
+
 function validateObjectIdParam(paramName) {
   return function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params[paramName])) {
@@ -90,4 +101,4 @@ function validateObjectIdParam(paramName) {
   };
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateObjectIdParam };
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateDeleteSubscription, validateObjectIdParam };
