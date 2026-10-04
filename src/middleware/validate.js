@@ -67,6 +67,20 @@ function validateUpdateTask(req, res, next) {
   next();
 }
 
+function validatePushSubscription(req, res, next) {
+  const { endpoint, keys } = req.body;
+
+  if (!endpoint || typeof endpoint !== "string" || !endpoint.startsWith("https://")) {
+    throw new ApiError(422, "endpoint is required and must be a non-empty string and real endpoint");
+  }
+
+  if (!keys || typeof keys !== "object" || !keys.p256dh || typeof keys.p256dh !== "string" || !keys.p256dh.trim() || !keys.auth || typeof keys.auth !== "string" || !keys.auth.trim()) {
+    throw new ApiError(422, "keys is required and must be a non-empty Object");
+  }
+
+  next();
+}
+
 function validateObjectIdParam(paramName) {
   return function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params[paramName])) {
@@ -76,4 +90,4 @@ function validateObjectIdParam(paramName) {
   };
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateObjectIdParam };
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateObjectIdParam };
