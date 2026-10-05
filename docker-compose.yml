@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3001:3000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      MONGO_URI: mongodb://mongo:27017/cleaning
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: c57f3f0fe26f658a6c505cf54f6002c4531e95d41945f4dd507ab3317a452334099d884cf17eda62bcb1e0701eccffe25fdbb030dc086cfcbcbde700df85e7db
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
+    depends_on:
+      - mongo
+      - redis
+
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+        - action: rebuild
+          path: package.json
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  mongo-data:
