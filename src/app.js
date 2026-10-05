@@ -10,7 +10,7 @@ const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
 
-const app = express();
+ const app = express();
 
 // Trust the first proxy hop (Render's load balancer) so req.ip reflects the real client IP.
 app.set("trust proxy", 1);

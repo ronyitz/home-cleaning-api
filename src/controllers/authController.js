@@ -12,7 +12,7 @@ function signToken(userId, householdId) {
 
 // POST /api/auth/signup
 async function signup(req, res) {
-  const { email, password, groupName, inviteCode } = req.body;
+  const { email, firstName, lastName, password, groupName, inviteCode } = req.body;
 
   if (!email || typeof email !== "string") {
     throw new ApiError(422, "email is required and must be a string");
@@ -29,7 +29,7 @@ async function signup(req, res) {
 
   if (groupName && typeof groupName === "string") {
     // Creating a new household
-    const user = await createUser({ email, password });
+    const user = await createUser({ firstName, lastName, email, password });
     const household = await Household.create({
       name: groupName,
       inviteCode: generateInviteCode(),
@@ -49,7 +49,7 @@ async function signup(req, res) {
       throw new ApiError(404, "Invalid invite code");
     }
 
-    const user = await createUser({ email, password });
+    const user = await createUser({ firstName, lastName, email, password, household: household._id });
     household.members.push(user._id);
     await household.save();
 

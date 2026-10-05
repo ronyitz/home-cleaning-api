@@ -3,14 +3,12 @@ const Room = require("../models/Room");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const { notifyHousehold } = require("../services/pushService");
-const Household = require("../models/Household");
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 // PATCH /api/tasks/:taskId/complete
 async function completeTask(req, res) {
   const task = await Task.findById(req.params.taskId).populate("room");
-  const household = await Household.findById(req.householdId);
   const user = await User.findById(req.userId);
 
   if (!task) {
@@ -22,7 +20,7 @@ async function completeTask(req, res) {
   await task.save();
 
   // Fire-and-forget: the response shouldn't wait for push delivery.
-  notifyHousehold(household._id,{ title: task.room.name + " - " + task.name, body: "המשימה בוצעה על ידי " + user.firstName }).catch((error) =>
+  notifyHousehold(task.room.household,{ title: task.room.name + " - " + task.name, body: "המשימה בוצעה על ידי " + user.firstName }).catch((error) =>
     console.error("Push notification failed:", error)
   );
 
