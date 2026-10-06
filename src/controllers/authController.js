@@ -81,6 +81,15 @@ async function signup(req, res) {
 async function login(req, res) {
   try {
     const { email, password } = req.body;
+
+    if(!email || typeof email !== "string") {
+      return res.status(422).json({ message: "email is required and must be a string" });
+    }
+
+    if(!password || typeof password !== "string") {
+      return res.status(422).json({ message: "password is required and must be a string" });
+    }
+
     const user = await User.findOne({ email });
     
     if (!user) {
