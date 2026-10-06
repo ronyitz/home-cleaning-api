@@ -152,15 +152,6 @@ describe("POST /api/auth/login", () => {
     expect(response2.body.message).toBe("password is required and must be a string");
    });  
 
-   it("should return 422 with a missing password", async () => {
-    const response = await request(app).post("/api/auth/signup").send({ email: "user8@example.com", password: "password", firstName: "John", lastName: "Doe", groupName: "My Household" });    
-    expect(response.statusCode).toBe(201);
-
-    const response2 = await request(app).post("/api/auth/login").send({ email: "user8@example.com" });
-    expect(response2.statusCode).toBe(422);
-    expect(response2.body.message).toBe("password is required and must be a string");
-   });  
-
    it("should return 422 with a missing email", async () => {
     const response = await request(app).post("/api/auth/signup").send({ email: "user9@example.com", password: "password", firstName: "John", lastName: "Doe", groupName: "My Household" });    
     expect(response.statusCode).toBe(201);
