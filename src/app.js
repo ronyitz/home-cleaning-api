@@ -17,15 +17,11 @@ app.set("trust proxy", 1);
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((origin) => origin.trim())
-  : ["http://localhost:5174"];
+  : ["http://localhost:5173", "http://localhost:5174"];
 
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Use authentication middleware for all routes except /api/auth
-const AUTH_ENABLED = process.env.AUTH_ENABLED !== "false";
-const authMiddleware = AUTH_ENABLED ? authenticate : (req, res, next) => next()
 
 // GET /api/health — keep-alive ping target; uptime shows whether the server restarted since the last ping.
 app.get("/api/health", (req, res) => {
@@ -39,10 +35,10 @@ if (RATE_LIMIT_ENABLED) {
   app.use(rateLimiterRedis);
 }
 
-app.use("/api/rooms", authMiddleware, roomRoutes);
-app.use("/api/tasks", authMiddleware, taskRoutes);
+app.use("/api/rooms", authenticate, roomRoutes);
+app.use("/api/tasks", authenticate, taskRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/push", authMiddleware, pushRoutes);
+app.use("/api/push", authenticate, pushRoutes);
 // Error handling middleware
 app.use(errorHandler);
 

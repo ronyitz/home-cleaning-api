@@ -7,7 +7,7 @@ const Task = require("../models/Task");
 
 const ApiError = require("../utils/ApiError");
 
-// Used in: app.js (global auth middleware, applied to /api/rooms and /api/tasks)
+// Used in: app.js (global auth middleware, applied to /api/rooms, /api/tasks and /api/push)
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
