@@ -22,7 +22,7 @@ async function notifyHousehold(household, data) {
         payload,
         {
           urgency: "high",
-          TTL: 60,
+          TTL: 60 * 60,
           // Passed per send (not setVapidDetails at load) so requiring this
           // module doesn't crash when VAPID env vars are missing, e.g. in CI.
           vapidDetails: {
