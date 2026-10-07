@@ -8,7 +8,7 @@ services:
       - path: .env
         required: false
     environment:
-      MONGO_URI: mongodb://mongo:27017/cleaning
+      MONGO_URI: mongodb://mongo:27017/cleaning?replicaSet=rs0
       REDIS_URL: redis://redis:6379
       JWT_SECRET: c57f3f0fe26f658a6c505cf54f6002c4531e95d41945f4dd507ab3317a452334099d884cf17eda62bcb1e0701eccffe25fdbb030dc086cfcbcbde700df85e7db
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:5174}
@@ -28,10 +28,19 @@ services:
 
   mongo:
     image: mongo:7
+    # Transactions require a replica set; a single-member one is enough locally.
+    command: ["--replSet", "rs0", "--bind_ip_all"]
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.runCommand('ping')"]
+      # Initiates the replica set on first run, then reports healthy only once this node is primary.
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - "try { rs.status() } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }) }; if (!db.hello().isWritablePrimary) quit(1)"
       interval: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
     volumes:
       - mongo-data:/data/db
 

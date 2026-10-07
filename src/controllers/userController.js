@@ -1,9 +1,9 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
-async function createUser({ firstName, lastName, email, password, household }) {
+async function createUser({ firstName, lastName, email, password, household }, session) {
   const hashedPassword = await bcrypt.hash(password, 10);
-  const user = await User.create({ firstName, lastName, email, password: hashedPassword, household });
+  const [user] = await User.create([{ firstName, lastName, email, password: hashedPassword, household }], { session });
   return user;
 }
 
