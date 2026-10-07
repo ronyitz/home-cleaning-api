@@ -153,13 +153,13 @@ describe("POST /api/auth/login", () => {
 
     const response2 = await request(app).post("/api/auth/login").send({ email: "user6@example.com", password: "password1" });
     expect(response2.statusCode).toBe(401);
-    expect(response2.body.message).toBe("Invalid email or password");
+    expect(response2.body.error.message).toBe("Invalid email or password");
   });
 
   it("should return 401 with an invalid email", async () => {
     const response2 = await request(app).post("/api/auth/login").send({ email: "user7@example.com", password: "password1" });
     expect(response2.statusCode).toBe(401);
-    expect(response2.body.message).toBe("Invalid email or password");
+    expect(response2.body.error.message).toBe("Invalid email or password");
   });
 
   it("should return 422 with a missing password", async () => {
@@ -168,7 +168,7 @@ describe("POST /api/auth/login", () => {
 
     const response2 = await request(app).post("/api/auth/login").send({ email: "user8@example.com" });
     expect(response2.statusCode).toBe(422);
-    expect(response2.body.message).toBe("password is required and must be a string");
+    expect(response2.body.error.message).toBe("password is required and must be a string");
   });
 
   it("should return 422 with a missing email", async () => {
@@ -177,7 +177,7 @@ describe("POST /api/auth/login", () => {
 
     const response2 = await request(app).post("/api/auth/login").send({ password: "password" });
     expect(response2.statusCode).toBe(422);
-    expect(response2.body.message).toBe("email is required and must be a string");
+    expect(response2.body.error.message).toBe("email is required and must be a string");
   });
 
 });
