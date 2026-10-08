@@ -8,7 +8,6 @@ const roomSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      unique: true,
       minlength: 1,
     },
     type: {
@@ -25,5 +24,8 @@ const roomSchema = new mongoose.Schema(
 
   { timestamps: true, collection: "rooms" }
 );
+
+roomSchema.index({ household: 1, name: 1 }, { unique: true });
+
 
 module.exports = mongoose.model("Room", roomSchema);
