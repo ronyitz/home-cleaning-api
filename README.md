@@ -2,15 +2,27 @@
 
 REST API for a household cleaning app. Members of a household share rooms and recurring cleaning tasks, mark tasks as done, and get a push notification when someone else completes one.
 
+## Live demo
+
+- **App:** [home-cleaning-ui.vercel.app](https://home-cleaning-ui.vercel.app/)
+
+> The API runs on Render's free tier, which sleeps when idle. The first request after a quiet period can take up to a minute while the server wakes up.
+
+<p>
+  <img src="docs/screenshot.jpeg" alt="App login screen" width="250">
+  <img src="docs/screenshot2.jpeg" alt="Rooms with task progress" width="250">
+</p>
+
+
 ## Tech stack
 
 - **Runtime:** Node.js 22, Express 5
-- **Database:** MongoDB with Mongoose
+- **Database:** MongoDB with Mongoose, using transactions for multi-document writes
 - **Cache / rate limiting:** Redis
 - **Auth:** JWT, role-based authorization, household-level data isolation
 - **Notifications:** Web Push (VAPID)
 - **Docs:** Swagger / OpenAPI
-- **Testing:** Jest, Supertest
+- **Testing:** Jest, Supertest, mongodb-memory-server (in-memory replica set)
 - **CI/CD:** GitHub Actions, deployed to Render after tests pass
 - **Local environment:** Docker, Docker Compose
 
@@ -19,8 +31,8 @@ REST API for a household cleaning app. Members of a household share rooms and re
 Requires only [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 ```bash
-git clone <repo-url>
-cd CleaningHomeProject
+git clone https://github.com/ronyitz/home-cleaning-api.git
+cd home-cleaning-api
 docker compose up -d
 ```
 
@@ -43,7 +55,7 @@ To enable push notifications locally, create a `.env` file with VAPID keys (see 
 
 ## Run locally without Docker
 
-Requires Node.js 22, plus a MongoDB and a Redis instance (local or hosted).
+Requires Node.js 22, plus a MongoDB and a Redis instance (local or hosted). MongoDB must run as a replica set, because signup uses transactions. MongoDB Atlas already does; a local standalone server does not.
 
 ```bash
 npm install
