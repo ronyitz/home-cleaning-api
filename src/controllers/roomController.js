@@ -2,13 +2,14 @@ const Room = require("../models/Room");
 const Task = require("../models/Task");
 const ApiError = require("../utils/ApiError");
 const ROOM_TYPES = require("../constants/roomTypes");
+const mongoose = require("mongoose");
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 
 // GET /api/rooms/:household
 async function getRooms(req, res) {
-  if(!req.params.household) {
+  if (!req.params.household) {
     throw new ApiError(422, "household is required and must be a string");
   }
   const rooms = await Room.find({ household: req.params.household });
@@ -21,7 +22,7 @@ async function getRoomTypes(req, res) {
 }
 
 // Creates tasks for a newly created room, from a client-provided list of { name, frequency }.
-async function createMultipleTasksForNewRoom(room, tasks) {
+async function createMultipleTasksForNewRoom(room, tasks, session) {
   if (!tasks || !tasks.length) {
     return;
   }
@@ -33,14 +34,22 @@ async function createMultipleTasksForNewRoom(room, tasks) {
     nextDueAt: new Date(Date.now() + task.frequency * DAY_IN_MS),
   }));
 
-  await Task.insertMany(taskDocs);
+  await Task.insertMany(taskDocs, { session });
 }
 
 // POST /api/rooms
 async function createRoom(req, res) {
-  const room = await Room.create({ name: req.body.name, type: req.body.type, household: req.householdId } );
-  if (room) {
-    await createMultipleTasksForNewRoom(room, req.body.tasks);
+  let room;
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+    [room] = await Room.create([{ name: req.body.name, type: req.body.type, household: req.householdId }], { session });
+      if (room) {
+        await createMultipleTasksForNewRoom(room, req.body.tasks, session);
+      }
+    });
+  } finally {
+    session.endSession();
   }
   res.status(201).json(room);
 }

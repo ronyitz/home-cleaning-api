@@ -4,11 +4,11 @@ const mongoose = require("mongoose");
 const User = require("../models/User");
 const Household = require("../models/Household");
 const ApiError = require("../utils/ApiError");
-const { createUser } = require("../controllers/userController");
+const { createUser } = require("./userService");
 const generateInviteCode = require("../utils/generateInviteCode");
 
-async function signup(req) {
-    const { email, firstName, lastName, password, groupName, inviteCode } = req.body;
+async function signup(data) {
+    const { email, firstName, lastName, password, groupName, inviteCode } = data;
 
     if (!email || typeof email !== "string") {
         throw new ApiError(422, "email is required and must be a string");
@@ -47,7 +47,8 @@ async function signup(req) {
         } finally {
             session.endSession();
         }
-        return { token: signToken(user._id, household._id), inviteCode: household.inviteCode, household: household._id };
+        
+        return { token: signToken(user._id, household._id), inviteCode: household.inviteCode, household: household._id, firstName: user.firstName, householdName: household.name };
 
     } else if (inviteCode && typeof inviteCode === "string") {
 
@@ -67,14 +68,14 @@ async function signup(req) {
         } finally {
             session.endSession();
         }
-        return { token: signToken(user._id, household._id), household: household._id };
+        return { token: signToken(user._id, household._id), household: household._id, firstName: user.firstName, householdName: household.name };
     } else {
         throw new ApiError(422, "groupName or inviteCode is required");
     }
 }
 
-async function login(req) {
-        const { email, password } = req.body;
+async function login(data) {
+        const { email, password } = data;
 
         if (!email || typeof email !== "string") {
             throw new ApiError(422, "email is required and must be a string");
@@ -96,9 +97,10 @@ async function login(req) {
         }
 
         const household = user.household ? await Household.findById(user.household) : null;
-        const token = jwt.sign({ userId: user._id, householdId: household._id }, process.env.JWT_SECRET, {
-            expiresIn: "180d",
-        });
+        if (!household) {
+            throw new ApiError(403, "User has no household");
+        }
+        const token = signToken(user._id, household._id);
 
 
         const isAdmin = user.role === "admin";
@@ -107,14 +109,15 @@ async function login(req) {
             token,
             household: user.household,
             householdName: household.name,
+            firstName: user.firstName,
             isAdmin: isAdmin,
             inviteCode: isAdmin && household ? household.inviteCode : null,
         };
 
 }
 
-async function verify(req) {
-    const authHeader = req.headers.authorization;
+async function verify(authorization) {
+    const authHeader = authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return { valid: false };
     }
@@ -123,7 +126,8 @@ async function verify(req) {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        return { valid: true, userId: decoded.userId };
+        const user = await User.findById(decoded.userId).select("firstName");
+        return { valid: true, userId: decoded.userId, firstName: user ? user.firstName : undefined };
     } catch (error) {
         return { valid: false };
     }

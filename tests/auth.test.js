@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken");
 const app = require("../src/app");
 const User = require("../src/models/User");
 const Household = require("../src/models/Household");
+const { createUser } = require("../src/services/userService");
 
 
 const mongoose = require("mongoose");
@@ -80,6 +81,7 @@ describe("POST /api/auth/signup", () => {
     expect(response.statusCode).toBe(201);
     expect(response.body.inviteCode).toBeDefined();
     expect(response.body.token).toBeDefined();
+    expect(response.body.householdName).toBe("My Household");
 
     const user = await User.findOne({ email: "user@example.com" });
     expect(user.password).not.toBe("password");
@@ -100,6 +102,7 @@ describe("POST /api/auth/signup", () => {
     const inviteCode = response.body.inviteCode;
     const response2 = await request(app).post("/api/auth/signup").send({ email: "user2@example.com", password: "password", firstName: "Ron", lastName: "Doe", inviteCode: inviteCode });
     expect(response2.statusCode).toBe(201);
+    expect(response2.body.householdName).toBe("My Household");
 
     const user2 = await User.findOne({ email: "user2@example.com" });
     expect(user2.role).toBe("user");
@@ -179,6 +182,26 @@ describe("POST /api/auth/login", () => {
     expect(response2.statusCode).toBe(422);
     expect(response2.body.error.message).toBe("email is required and must be a string");
   });
+
+  it("should return 403 when the user has no household", async () => {
+    await createUser({ firstName: "John", lastName: "Doe", email: "user12@example.com", password: "password" });
+    const response = await request(app).post("/api/auth/login").send({ email: "user12@example.com", password: "password" });
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("should return 403 when the user's household was deleted", async () => {
+    await request(app).post("/api/auth/signup").send({ email: "user13@example.com", password: "password", firstName: "John", lastName: "Doe", groupName: "My Household" });
+    await Household.deleteMany({});
+    const response2 = await request(app).post("/api/auth/login").send({ email: "user13@example.com", password: "password" });
+    expect(response2.statusCode).toBe(403);
+  });
+
+  it("should return 422 when the password is a query object ($ne)", async () => {
+    await request(app).post("/api/auth/signup").send({ email: "user14@example.com", password: "password", firstName: "John", lastName: "Doe", groupName: "My Household" });
+    const response2 = await request(app).post("/api/auth/login").send({ email: "user14@example.com", password: { $ne: null  }});
+    expect(response2.statusCode).toBe(422);
+  });
+
 
 });
 
