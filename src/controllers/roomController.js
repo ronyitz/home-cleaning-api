@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 
-// GET /api/rooms/:household
+//V GET /api/rooms/:household
 async function getRooms(req, res) {
   if (!req.params.household) {
     throw new ApiError(422, "household is required and must be a string");
@@ -16,28 +16,7 @@ async function getRooms(req, res) {
   res.json(rooms);
 }
 
-// GET /api/rooms/types
-async function getRoomTypes(req, res) {
-  res.json(ROOM_TYPES);
-}
-
-// Creates tasks for a newly created room, from a client-provided list of { name, frequency }.
-async function createMultipleTasksForNewRoom(room, tasks, session) {
-  if (!tasks || !tasks.length) {
-    return;
-  }
-
-  const taskDocs = tasks.map((task) => ({
-    name: task.name,
-    room: room._id,
-    frequency: task.frequency,
-    nextDueAt: new Date(Date.now() + task.frequency * DAY_IN_MS),
-  }));
-
-  await Task.insertMany(taskDocs, { session });
-}
-
-// POST /api/rooms
+//V POST /api/rooms
 async function createRoom(req, res) {
   let room;
   const session = await mongoose.startSession();
@@ -54,13 +33,23 @@ async function createRoom(req, res) {
   res.status(201).json(room);
 }
 
-// DELETE /api/rooms/:id
+//V DELETE /api/rooms/:id
 async function deleteRoom(req, res) {
-  const room = await Room.findByIdAndDelete(req.params.id);
+  let room;
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      room = await Room.findByIdAndDelete(req.params.id, { session });
+      if (room) {
+        await Task.deleteMany({ room: room._id }, { session });
+      }
+    });
+  } finally {
+    session.endSession();
+  }
   if (!room) {
     throw new ApiError(404, "Room not found");
   }
-  await Task.deleteMany({ room: room._id });
   res.json({ message: "Room deleted" });
 }
 
@@ -76,6 +65,28 @@ async function updateRoom(req, res) {
   }
   res.json(room);
 }
+
+//V Creates tasks for a newly created room, from a client-provided list of { name, frequency }.
+async function createMultipleTasksForNewRoom(room, tasks, session) {
+  if (!tasks || !tasks.length) {
+    return;
+  }
+
+  const taskDocs = tasks.map((task) => ({
+    name: task.name,
+    room: room._id,
+    frequency: task.frequency,
+    nextDueAt: new Date(Date.now() + task.frequency * DAY_IN_MS),
+  }));
+
+  await Task.insertMany(taskDocs, { session });
+}
+
+//V GET /api/rooms/types
+async function getRoomTypes(req, res) {
+  res.json(ROOM_TYPES);
+}
+
 
 
 

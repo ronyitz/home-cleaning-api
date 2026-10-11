@@ -174,3 +174,104 @@ describe("POST /api/rooms", () => {
 });
 
 
+
+describe("DELETE /api/rooms/:id", () => {
+  it("should return 422 when the id is not a valid id", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const response2 = await request(app).delete("/api/rooms/not-a-valid-id").set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(422);
+  });
+
+  it("should return 404 when the room does not exist", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).delete("/api/rooms/507f1f71c3a3a20000000000").set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should return 403 when a regular member tries to delete a room", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const member = await signupMember("member@example.com", admin.inviteCode);
+    const room = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const response2 = await request(app).delete(`/api/rooms/${room.body._id}`).set("Authorization", `Bearer ${member.token}`);
+    expect(response2.statusCode).toBe(403);
+  });
+
+  it("should return 403 when an admin of another household tries to delete the room", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const admin2 = await signupAdmin("admin2@example.com", "MyHousehold2");
+    const room = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const response2 = await request(app).delete(`/api/rooms/${room.body._id}`).set("Authorization", `Bearer ${admin2.token}`);
+    expect(response2.statusCode).toBe(403);
+  });
+
+  it("should return 200 and delete the room and its tasks when an admin deletes a room", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({
+      name: "Kitchen", type: "kitchen", tasks: [
+        {
+          "name": "ניקוי משטחים",
+          "frequency": 1
+        },
+        {
+          "name": "ריקון פח",
+          "frequency": 2
+        },
+        {
+          "name": "ניקוי תנור",
+          "frequency": 30
+        }
+      ]
+    }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const room = await Room.findById(response.body._id);
+    expect(room).not.toBeNull();
+    expect(await Task.countDocuments({ room: response.body._id })).toBe(3);
+    const response2 = await request(app).delete(`/api/rooms/${response.body._id}`).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(200);
+    expect(await Room.findById(response.body._id)).toBeNull();
+    expect(await Task.countDocuments({ room: response.body._id })).toBe(0);
+  });
+
+  it("should not delete the room if deleting its tasks fails", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({
+      name: "Kitchen", type: "kitchen", tasks: [
+        {
+          "name": "ניקוי משטחים",
+          "frequency": 1
+        },
+        {
+          "name": "ריקון פח",
+          "frequency": 2
+        },
+        {
+          "name": "ניקוי תנור",
+          "frequency": 30
+        }
+      ]
+    }).set("Authorization", `Bearer ${admin.token}`);
+    expect(await Task.countDocuments({ room: response.body._id })).toBe(3);
+    const deleteManySpy = jest.spyOn(Task, "deleteMany").mockRejectedValue(new Error("DB failure"));
+    const response2 = await request(app).delete(`/api/rooms/${response.body._id}`).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(500);
+    expect(await Room.findById(response.body._id)).not.toBeNull();
+    expect(await Task.countDocuments({ room: response.body._id })).toBe(3);
+    expect(deleteManySpy).toHaveBeenCalled();
+  });
+});
+
+
+
+describe("PUT /api/rooms/:id", () => {
+  it.todo("should return 422 when the name is missing or the type is invalid");
+
+  it.todo("should return 403 when an admin of another household tries to update the room");
+
+  it.todo("should return 200 and update the room's name and type");
+
+  it.todo("should return 409 when renaming a room to a name that already exists in the household");
+});
+
+
