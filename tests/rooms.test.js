@@ -75,17 +75,20 @@ describe("GET /api/rooms/:household", () => {
     expect(response.statusCode).toBe(403);
   });
 
-  it("should return 200 with the household's rooms", async () => {
-    const rooms = [{ _id: "64c000000000000000000001", name: "Kitchen", type: "kitchen", household: HOUSEHOLD_ID }];
-    const findSpy = jest.spyOn(Room, "find").mockResolvedValue(rooms);
+  it("should return 200 with only the household's rooms", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const admin2 = await signupAdmin("admin2@example.com", "MyHousehold2");
+    await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    await request(app).post("/api/rooms").send({ name: "Office", type: "office" }).set("Authorization", `Bearer ${admin2.token}`);
 
     const response = await request(app)
-      .get(`/api/rooms/${HOUSEHOLD_ID}`)
-      .set("Authorization", `Bearer ${tokenFor(HOUSEHOLD_ID)}`);
+      .get(`/api/rooms/${admin.household}`)
+      .set("Authorization", `Bearer ${admin.token}`);
 
     expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual(rooms);
-    expect(findSpy).toHaveBeenCalledWith({ household: HOUSEHOLD_ID });
+    expect(response.body.length).toBe(1);
+    expect(response.body[0].name).toBe("Kitchen");
+    expect(response.body[0].household).toBe(admin.household);
   });
 });
 
@@ -265,13 +268,49 @@ describe("DELETE /api/rooms/:id", () => {
 
 
 describe("PUT /api/rooms/:id", () => {
-  it.todo("should return 422 when the name is missing or the type is invalid");
+  it("should return 422 when the name is missing or the type is invalid", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const response2 = await request(app).put("/api/rooms/" + response.body._id).send({ name: null, type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(422);
+    expect(response2.body.error.message).toBe("name is required and must be a string");
+    const response3 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "not-exists" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response3.statusCode).toBe(422);
+    expect(response3.body.error.message).toContain("type must be one of:");
+  });
 
-  it.todo("should return 403 when an admin of another household tries to update the room");
+  it("should return 403 when an admin of another household tries to update the room", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const admin2 = await signupAdmin("admin2@example.com", "MyHousehold2");
+    const response = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const response3 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "kitchen" }).set("Authorization", `Bearer ${admin2.token}`);
+    expect(response3.statusCode).toBe(403);
+    const room = await Room.findById(response.body._id);
+    expect(room.name).toBe("Kitchen");
+  });
 
-  it.todo("should return 200 and update the room's name and type");
+  it("should return 200 and update the room's name and type", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const response2 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "living_room" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(200);
+    const room = await Room.findById(response.body._id);
+    expect(room.name).toBe("Living Room");
+    expect(room.type).toBe("living_room");
+  });
 
-  it.todo("should return 409 when renaming a room to a name that already exists in the household");
+  it("should return 409 when renaming a room to a name that already exists in the household", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const response = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+    const response2 = await request(app).post("/api/rooms").send({ name: "Living Room", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(201);
+    const response3 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response3.statusCode).toBe(409);
+  });
 });
 
 
