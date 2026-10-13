@@ -15,6 +15,10 @@ const roomSchema = new mongoose.Schema(
       required: true,
       enum: ROOM_TYPE_VALUES,
     },
+    order: {
+      type: Number,
+      required: true,
+    },
     household: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Household",

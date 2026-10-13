@@ -90,6 +90,22 @@ describe("GET /api/rooms/:household", () => {
     expect(response.body[0].name).toBe("Kitchen");
     expect(response.body[0].household).toBe(admin.household);
   });
+
+  it("should return the rooms sorted by order", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const bedroom = await request(app).post("/api/rooms").send({ name: "Bedroom", type: "bedroom" }).set("Authorization", `Bearer ${admin.token}`);
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const office = await request(app).post("/api/rooms").send({ name: "Office", type: "office" }).set("Authorization", `Bearer ${admin.token}`);
+    // Created in alphabetical order, so the expected order below differs from both
+    // the creation order and the name order (which the household+name index returns).
+    await Room.updateOne({ _id: office.body._id }, { order: 1 });
+    await Room.updateOne({ _id: bedroom.body._id }, { order: 2 });
+    await Room.updateOne({ _id: kitchen.body._id }, { order: 3 });
+
+    const response = await request(app).get(`/api/rooms/${admin.household}`).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(200);
+    expect(response.body.map((room) => room.name)).toEqual(["Office", "Bedroom", "Kitchen"]);
+  });
 });
 
 describe("POST /api/rooms", () => {
@@ -115,6 +131,25 @@ describe("POST /api/rooms", () => {
     expect(response.body.name).toBe("Kitchen");
     const tasks = await Task.find({ room: response.body._id });
     expect(tasks.length).toBe(3);
+  });
+
+  it("should give each new room the next order number in its household", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const admin2 = await signupAdmin("admin2@example.com", "MyHousehold2");
+    const first = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(first.statusCode).toBe(201);
+    const second = await request(app).post("/api/rooms").send({ name: "Bedroom", type: "bedroom" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(second.statusCode).toBe(201);
+    const third = await request(app).post("/api/rooms").send({ name: "Office", type: "office" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(third.statusCode).toBe(201);
+    // The first room of a different household, created after the three above.
+    const other = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin2.token}`);
+    expect(other.statusCode).toBe(201);
+
+    expect(first.body.order).toBe(1);
+    expect(second.body.order).toBe(2);
+    expect(third.body.order).toBe(3);
+    expect(other.body.order).toBe(1);
   });
 
   it("should return 403 when a regular member tries to create a room", async () => {
@@ -311,6 +346,23 @@ describe("PUT /api/rooms/:id", () => {
     const response3 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
     expect(response3.statusCode).toBe(409);
   });
+});
+
+
+
+describe("PUT /api/rooms/order", () => {
+
+  it.todo("should return 422 when roomIds is missing, empty or contains an invalid id");
+
+  it.todo("should return 403 when a regular member tries to reorder the rooms");
+
+  it.todo("should return 422 when roomIds does not contain all the rooms of the household");
+
+  it.todo("should reject a list that contains a room of another household");
+
+  it.todo("should return 200 and save the new order");
+
+  it.todo("should not change any room if saving the new order fails");
 });
 
 

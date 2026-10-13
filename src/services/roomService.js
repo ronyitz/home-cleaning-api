@@ -10,7 +10,7 @@ async function getRooms(householdId) {
     if (!householdId || typeof householdId !== "string") {
         throw new ApiError(422, "household is required and must be a string");
     }
-    return Room.find({ household: householdId });
+    return Room.find({ household: householdId }).sort('order');
 }
 
 async function updateRoom(roomId, { name, type }) {
@@ -31,7 +31,9 @@ async function createRoom({ name, type, tasks }, householdId) {
     const session = await mongoose.startSession();
     try {
         await session.withTransaction(async () => {
-            [room] = await Room.create([{ name: name, type: type, household: householdId }], { session });
+            const lastRoom = await Room.findOne({ household: householdId }).sort({ order: -1 }).session(session);
+            const order = lastRoom ? lastRoom.order + 1 : 1;
+            [room] = await Room.create([{ name: name, type: type, household: householdId, order: order }], { session });
             if (room) {
                 await createMultipleTasksForNewRoom(room, tasks, session);
             }
@@ -77,8 +79,30 @@ async function deleteRoom(roomId) {
     return;
 }
 
+// Saves a new order for the household's rooms.
+async function reorderRooms(householdId, roomIds) {
+    const updates = roomIds.map((roomId, index) => ({
+        updateOne: {
+            filter: { _id: roomId, household: householdId },
+            update: { order: index + 1 },
+        },
+    }));
+
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            await Room.bulkWrite(updates, { session });
+        });
+    } finally {
+        session.endSession();
+    }
+    return getRooms(householdId);
+}
 
 
 
 
-module.exports = { getRooms, updateRoom, createRoom, deleteRoom };
+
+
+
+module.exports = { getRooms, updateRoom, createRoom, deleteRoom, reorderRooms};

@@ -31,4 +31,10 @@ async function getRoomTypes(req, res) {
   res.json(ROOM_TYPES);
 }
 
-module.exports = { createRoom, getRooms, getRoomTypes, deleteRoom, updateRoom };
+// PUT /api/rooms/order
+async function reorderRooms(req, res) {
+  const rooms = await roomService.reorderRooms(req.householdId, req.body);
+  res.status(200).json(rooms);
+}
+
+module.exports = { createRoom, getRooms, getRoomTypes, deleteRoom, updateRoom, reorderRooms };
