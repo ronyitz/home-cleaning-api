@@ -1,12 +1,18 @@
 const webpush = require("web-push");
+const { UnrecoverableError } = require("bullmq");
 const PushSubscription = require("../models/PushSubscription");
 
-// Sends a notification to every stored push subscription.
-// Removes subscriptions the push service reports as gone (404/410).
+// Sends a notification to one push subscription (one device).
+// Skips it if the subscription was removed meanwhile (e.g. the user logged out).
+// Deletes it when the push service reports it as gone (404/410).
+// Throws UnrecoverableError on 400/401/403/413 (a bug in our request - retrying won't help),
+// so the job fails right away. Throws on other errors, so the queue retries the job.
 // Uses the app's existing mongoose connection - never connects/disconnects here.
-async function notifyHousehold(household, data) {
-  const subscriptions = await PushSubscription.find({ household: household })
-
+async function notifySubscription(subscriptionId, data) {
+  const subscription = await PushSubscription.findById(subscriptionId);
+  if (!subscription) {
+    return;
+  }
 
   const payload = JSON.stringify({
     title: data?.title,
@@ -14,34 +20,36 @@ async function notifyHousehold(household, data) {
     url: "/",
   });
 
-  for (const subscription of subscriptions) {
-    const shortEndpoint = subscription.endpoint.slice(0, 60);
-    try {
-      const result = await webpush.sendNotification(
-        { endpoint: subscription.endpoint, keys: subscription.keys },
-        payload,
-        {
-          urgency: "high",
-          TTL: 60 * 60,
-          // Passed per send (not setVapidDetails at load) so requiring this
-          // module doesn't crash when VAPID env vars are missing, e.g. in CI.
-          vapidDetails: {
-            subject: process.env.VAPID_SUBJECT,
-            publicKey: process.env.VAPID_PUBLIC_KEY,
-            privateKey: process.env.VAPID_PRIVATE_KEY,
-          },
-        }
-      );
-      console.log(`Sent (${result.statusCode}): ${shortEndpoint}...`);
-    } catch (error) {
-      if (error.statusCode === 404 || error.statusCode === 410) {
-        await subscription.deleteOne();
-        console.log(`Gone (${error.statusCode}), deleted: ${shortEndpoint}...`);
-      } else {
-        console.log(`Failed (${error.statusCode ?? "no status"}): ${shortEndpoint}... ${error.body ?? error.message}`);
+  const shortEndpoint = subscription.endpoint.slice(0, 60);
+  try {
+    const result = await webpush.sendNotification(
+      { endpoint: subscription.endpoint, keys: subscription.keys },
+      payload,
+      {
+        urgency: "high",
+        TTL: 60 * 60,
+        // Passed per send (not setVapidDetails at load) so requiring this
+        // module doesn't crash when VAPID env vars are missing, e.g. in CI.
+        vapidDetails: {
+          subject: process.env.VAPID_SUBJECT,
+          publicKey: process.env.VAPID_PUBLIC_KEY,
+          privateKey: process.env.VAPID_PRIVATE_KEY,
+        },
       }
+    );
+    console.log(`Sent (${result.statusCode}): ${shortEndpoint}...`);
+  } catch (error) {
+    if (error.statusCode === 404 || error.statusCode === 410) {
+      await subscription.deleteOne();
+      console.log(`Gone (${error.statusCode}), deleted: ${shortEndpoint}...`);
+    } else {
+      console.log(`Failed (${error.statusCode ?? "no status"}): ${shortEndpoint}... ${error.body ?? error.message}`);
+      if ([400, 401, 403, 413].includes(error.statusCode)) {
+        throw new UnrecoverableError(`Push rejected (${error.statusCode}): ${error.body ?? error.message}`);
+      }
+      throw error;
     }
   }
 }
 
-module.exports = { notifyHousehold };
+module.exports = { notifySubscription };

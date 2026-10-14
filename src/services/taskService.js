@@ -84,7 +84,7 @@ async function completeTask(taskId, userId) {
     task.nextDueAt = new Date(Date.now() + task.frequency * DAY_IN_MS);
     await task.save();
 
-    await notificationQueue.add("task-completed", { householdId: task.room.household.toString(), title: task.room.name + " (תור) - " + task.name, body: "המשימה בוצעה על ידי " + user.firstName });
+    await notificationQueue.add("task-completed", { householdId: task.room.household.toString(), title: task.room.name + " - " + task.name, body: "המשימה בוצעה על ידי " + user.firstName });
 
     return task;
 }
