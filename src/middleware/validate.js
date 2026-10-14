@@ -101,4 +101,12 @@ function validateObjectIdParam(paramName) {
   };
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateDeleteSubscription, validateObjectIdParam };
+function validateReorderRooms(req, res, next) {
+    const roomIds = req.body;
+    if (!roomIds || !Array.isArray(roomIds) || !roomIds.length || !roomIds.every((id) => mongoose.Types.ObjectId.isValid(id)) || new Set(roomIds).size !== roomIds.length) {
+        throw new ApiError(422, "array with valid ids should be sent");
+    }
+    next();
+}
+
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms };

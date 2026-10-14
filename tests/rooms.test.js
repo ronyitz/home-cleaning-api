@@ -351,18 +351,74 @@ describe("PUT /api/rooms/:id", () => {
 
 
 describe("PUT /api/rooms/order", () => {
+  it("should return 422 when the body is not a non-empty array of valid ids", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(kitchen.statusCode).toBe(201);
+    const living_room = await request(app).post("/api/rooms").send({ name: "living_room", type: "living_room" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(living_room.statusCode).toBe(201);
+    const response = await request(app).put("/api/rooms/order").send({ name: "x" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(422);
+    const response2 = await request(app).put("/api/rooms/order").send([]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response2.statusCode).toBe(422);
+    const response3 = await request(app).put("/api/rooms/order").send(["abc"]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response3.statusCode).toBe(422);
+    const response4 = await request(app).put("/api/rooms/order").send([kitchen.body._id, kitchen.body._id]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response4.statusCode).toBe(422);
+    // None of the invalid requests changed the order.
+    expect((await Room.findById(kitchen.body._id)).order).toBe(1);
+    expect((await Room.findById(living_room.body._id)).order).toBe(2);
+  });
 
-  it.todo("should return 422 when roomIds is missing, empty or contains an invalid id");
+  it("should let a regular member reorder the rooms", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const member = await signupMember("member@example.com", admin.inviteCode);
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(kitchen.statusCode).toBe(201);
+    const bedroom = await request(app).post("/api/rooms").send({ name: "Bedroom", type: "bedroom" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(bedroom.statusCode).toBe(201);
+    const response = await request(app).put("/api/rooms/order").send([kitchen.body._id, bedroom.body._id]).set("Authorization", `Bearer ${member.token}`);
+    expect(response.statusCode).toBe(200);
+  });
 
-  it.todo("should return 403 when a regular member tries to reorder the rooms");
+  it("should return 200 and save the new order", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const bedroom = await request(app).post("/api/rooms").send({ name: "Bedroom", type: "bedroom" }).set("Authorization", `Bearer ${admin.token}`);
+    const office = await request(app).post("/api/rooms").send({ name: "Office", type: "office" }).set("Authorization", `Bearer ${admin.token}`);
+    const response = await request(app).put("/api/rooms/order").send([kitchen.body._id, office.body._id, bedroom.body._id]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(200);
+    expect(response.body.map((room) => room._id)).toEqual([kitchen.body._id, office.body._id, bedroom.body._id]);
+  });
 
-  it.todo("should return 422 when roomIds does not contain all the rooms of the household");
+  it("should not change a room of another household that is in the list", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const admin2 = await signupAdmin("admin2@example.com", "MyHousehold2");
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const otherKitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin2.token}`);
+    // The other household's room is second in the list, so without the household filter
+    // its order would change from 1 to 2.
+    const response = await request(app).put("/api/rooms/order").send([kitchen.body._id, otherKitchen.body._id]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(200);
+    expect(response.body.map((room) => room._id)).toEqual([kitchen.body._id]);
+    expect((await Room.findById(otherKitchen.body._id)).order).toBe(1);
+  });
 
-  it.todo("should reject a list that contains a room of another household");
-
-  it.todo("should return 200 and save the new order");
-
-  it.todo("should not change any room if saving the new order fails");
+  it("should not change any room if saving the new order fails", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const kitchen = await request(app).post("/api/rooms").send({ name: "Kitchen", type: "kitchen" }).set("Authorization", `Bearer ${admin.token}`);
+    const bedroom = await request(app).post("/api/rooms").send({ name: "Bedroom", type: "bedroom" }).set("Authorization", `Bearer ${admin.token}`);
+    // Really writes the first update, then fails, so only the transaction can undo that write.
+    const realBulkWrite = Room.bulkWrite.bind(Room);
+    jest.spyOn(Room, "bulkWrite").mockImplementationOnce(async (updates, options) => {
+      await realBulkWrite(updates.slice(0, 1), options);
+      throw new Error("DB failure");
+    });
+    const response = await request(app).put("/api/rooms/order").send([bedroom.body._id, kitchen.body._id]).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(500);
+    expect((await Room.findById(kitchen.body._id)).order).toBe(1);
+    expect((await Room.findById(bedroom.body._id)).order).toBe(2);
+  });
 });
 
 
