@@ -1,6 +1,11 @@
 process.env.RATE_LIMIT_ENABLED = "false";
 process.env.JWT_SECRET = "test-secret";
 
+// Replace the notification queue, so loading the app doesn't connect to Redis.
+jest.mock("../src/queues/notificationQueue", () => ({
+  notificationQueue: { add: jest.fn() },
+}));
+
 const request = require("supertest");
 const app = require("../src/app");
 const Room = require("../src/models/Room");
