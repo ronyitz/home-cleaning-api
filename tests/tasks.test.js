@@ -10,6 +10,7 @@ const request = require("supertest");
 const app = require("../src/app");
 const Room = require("../src/models/Room");
 const Task = require("../src/models/Task");
+const TaskCompletion = require("../src/models/TaskCompletion");
 
 const mongoose = require("mongoose");
 const { MongoMemoryReplSet } = require("mongodb-memory-server");
@@ -260,6 +261,12 @@ describe("PATCH /api/tasks/:taskId/complete", () => {
     expect(nextDueAt - completedAt).toBeGreaterThanOrEqual(7 * DAY_IN_MS);
     expect(nextDueAt - completedAt).toBeLessThan(7 * DAY_IN_MS + 1000);
   });
+
+  // Completing a task saves one TaskCompletion with the task's household, task and room names, and the user who did it.
+  it.todo("should create a TaskCompletion with the task details and the completing user");
+
+  // TaskCompletion.create fails inside the transaction, so the task update is rolled back too.
+  it.todo("should return 500 and leave the task unchanged when saving the completion fails");
 });
 
 describe("DELETE /api/tasks/:taskId", () => {

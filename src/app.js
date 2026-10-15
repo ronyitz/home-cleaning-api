@@ -5,6 +5,7 @@ const swaggerSpec = require("./swagger");
 const roomRoutes = require("./routes/roomRoutes");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const historyRoutes = require("./routes/historyRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
@@ -35,6 +36,7 @@ if (RATE_LIMIT_ENABLED) {
   app.use(rateLimiterRedis);
 }
 
+app.use("/api/history", authenticate, historyRoutes);
 app.use("/api/rooms", authenticate, roomRoutes);
 app.use("/api/tasks", authenticate, taskRoutes);
 app.use("/api/auth", authRoutes);

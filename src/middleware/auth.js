@@ -36,7 +36,7 @@ async function requireAdmin(req, res, next) {
   next();
 }
 
-// Used in: roomRoutes.js (GET /:household), taskRoutes.js (GET /:household)
+// Used in: roomRoutes.js (GET /:household), taskRoutes.js (GET /:household), historyRoutes.js (GET /:household)
 async function requireSameHousehold(req, res, next) {
   // The household from the JWT
   const householdId = req.householdId;
