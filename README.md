@@ -1,6 +1,6 @@
 # Home Cleaning API
 
-REST API for a household cleaning app. Members of a household share rooms and recurring cleaning tasks, mark tasks as done, and get a push notification when someone else completes one.
+REST API for a household cleaning app. Members of a household share rooms and recurring cleaning tasks, mark tasks as done, and get push notifications: when someone else completes a task, and as a scheduled digest of upcoming tasks. Every completion is saved to a history of who did what and when.
 
 ## Live demo
 
@@ -19,6 +19,7 @@ REST API for a household cleaning app. Members of a household share rooms and re
 - **Runtime:** Node.js 22, Express 5
 - **Database:** MongoDB with Mongoose, using transactions for multi-document writes
 - **Cache / rate limiting:** Redis
+- **Background jobs:** BullMQ on Redis (retries with exponential backoff, scheduled jobs)
 - **Auth:** JWT, role-based authorization, household-level data isolation
 - **Notifications:** Web Push (VAPID)
 - **Docs:** Swagger / OpenAPI
@@ -80,24 +81,40 @@ All routes are under `/api`. Full documentation is available in Swagger at `/api
 | Area | Routes |
 |---|---|
 | Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/verify` |
-| Rooms | list, create, update, delete (create/update/delete are admin only) |
+| Rooms | list, create, update, delete, reorder (create/update/delete are admin only) |
 | Tasks | list by household or room, create, update, complete, delete |
 | Push | `GET /push/vapid-public-key`, `POST /push/subscribe`, `POST /push/unsubscribe` |
 
 All routes except auth require a `Bearer` token. Users only see data from their own household.
+
+## How notifications work
+
+Push notifications are sent through a BullMQ job queue, not inside the HTTP request:
+
+1. Completing a task saves the task and its history record in one transaction, then adds a `task-completed` job.
+2. The worker finds the household's push subscriptions and adds one `send-push` job per subscription.
+3. Each `send-push` job is retried with backoff on temporary failures. Expired subscriptions (404/410) are deleted, and other permanent errors are not retried.
+
+A job scheduler adds a `daily-digest` job on a cron schedule (Israel time), which sends each household a summary of its upcoming tasks the same way.
+
+The worker runs in the same process as the API, to fit Render's free tier.
 
 ## Project structure
 
 ```
 src/
   config/        Redis client
-  controllers/   Request handlers
+  constants/     Shared constants (room types)
+  controllers/   Request handlers (thin: read the request, call a service)
   middleware/    Auth, validation, rate limiting, error handling
   models/        Mongoose schemas
+  queues/        BullMQ notification queue and job schedulers
   routes/        Express routers
-  services/      Push notification sending
+  services/      Business logic (auth, rooms, tasks, push subscriptions)
+  utils/         ApiError, invite code generator
+  workers/       BullMQ worker that processes notification jobs
   app.js         Express app setup
-  server.js      Entry point (connects to MongoDB and Redis, starts the server)
+  server.js      Entry point (connects to MongoDB and Redis, starts the worker and the server)
 tests/           Jest + Supertest tests
 scripts/         One-off maintenance scripts
 ```
