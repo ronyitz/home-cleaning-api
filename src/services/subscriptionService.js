@@ -37,13 +37,13 @@ async function notifySubscription(subscriptionId, data) {
         },
       }
     );
-    console.log(`Sent (${result.statusCode}): ${shortEndpoint}...`);
+    console.log(`Sent (${result.statusCode}) to user ${subscription.user}: ${shortEndpoint}...`);
   } catch (error) {
     if (error.statusCode === 404 || error.statusCode === 410) {
       await subscription.deleteOne();
-      console.log(`Gone (${error.statusCode}), deleted: ${shortEndpoint}...`);
+      console.log(`Gone (${error.statusCode}), deleted subscription of user ${subscription.user}: ${shortEndpoint}...`);
     } else {
-      console.log(`Failed (${error.statusCode ?? "no status"}): ${shortEndpoint}... ${error.body ?? error.message}`);
+      console.log(`Failed (${error.statusCode ?? "no status"}) for user ${subscription.user}: ${shortEndpoint}... ${error.body ?? error.message}`);
       if ([400, 401, 403, 413].includes(error.statusCode)) {
         throw new UnrecoverableError(`Push rejected (${error.statusCode}): ${error.body ?? error.message}`);
       }

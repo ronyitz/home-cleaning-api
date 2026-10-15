@@ -24,11 +24,11 @@ function startNotificationWorker() {
                 }))
             );
         } else if (job.name === "household-digest") {
-            const tasks = await getTasks(job.data.householdId, 3);
+            const tasks = await getTasks(job.data.householdId, 7);
             if (tasks.length === 0) return;
             const title = tasks.length === 1
-                ? "משימה אחת ל-3 הימים הקרובים"
-                : `${tasks.length} משימות ל-3 הימים הקרובים`;
+                ? "משימה אחת לשבוע הקרוב"
+                : `${tasks.length} משימות לשבוע הקרוב`;
             const body = tasks.map((task) => `${task.name} (${task.room.name})`).join("\n");
             const subscriptions = await Subscription.find({ household: job.data.householdId });
             await notificationQueue.addBulk(
