@@ -11,6 +11,7 @@ if (missing.length > 0) {
 const mongoose = require("mongoose");
 const redisClient = require("./config/redis");
 const app = require("./app");
+const { registerSchedulers } = require("./queues/schedulers");
 const { startNotificationWorker } = require("./workers/notificationWorker");
 
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ async function startServer() {
     await redisClient.connect();
     console.log("Connected to Redis");
 
+    await registerSchedulers();
     startNotificationWorker();
     console.log("Notification worker started");
 
