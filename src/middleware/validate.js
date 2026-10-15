@@ -67,7 +67,7 @@ function validateUpdateTask(req, res, next) {
   next();
 }
 
-function validatePushSubscription(req, res, next) {
+function validateSubscription(req, res, next) {
   const { endpoint, keys } = req.body;
 
   if (!endpoint || typeof endpoint !== "string" || !endpoint.startsWith("https://")) {
@@ -109,4 +109,4 @@ function validateReorderRooms(req, res, next) {
     next();
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validatePushSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms };
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms };

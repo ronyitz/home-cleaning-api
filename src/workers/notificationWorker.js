@@ -1,13 +1,13 @@
 const { Worker } = require("bullmq");
 const { connection, notificationQueue } = require("../queues/notificationQueue");
-const PushSubscription = require("../models/PushSubscription");
-const { notifySubscription } = require("../services/pushService");
+const Subscription = require("../models/Subscription");
+const { notifySubscription } = require("../services/subscriptionService");
 
 
 function startNotificationWorker() {
     const worker = new Worker("notifications", async (job) => {
         if (job.name === "task-completed") {
-            const subscriptions = await PushSubscription.find({ household: job.data.householdId })
+            const subscriptions = await Subscription.find({ household: job.data.householdId })
             for (let i = 0; i < subscriptions.length; i++) {
                 await notificationQueue.add("send-push", {subscriptionId: subscriptions[i]._id, ...job.data})
             }

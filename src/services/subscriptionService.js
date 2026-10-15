@@ -1,6 +1,6 @@
 const webpush = require("web-push");
 const { UnrecoverableError } = require("bullmq");
-const PushSubscription = require("../models/PushSubscription");
+const Subscription = require("../models/Subscription");
 
 // Sends a notification to one push subscription (one device).
 // Skips it if the subscription was removed meanwhile (e.g. the user logged out).
@@ -9,7 +9,7 @@ const PushSubscription = require("../models/PushSubscription");
 // so the job fails right away. Throws on other errors, so the queue retries the job.
 // Uses the app's existing mongoose connection - never connects/disconnects here.
 async function notifySubscription(subscriptionId, data) {
-  const subscription = await PushSubscription.findById(subscriptionId);
+  const subscription = await Subscription.findById(subscriptionId);
   if (!subscription) {
     return;
   }

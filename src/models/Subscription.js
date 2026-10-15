@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const PushSubscriptionSchema = new mongoose.Schema(
+const SubscriptionSchema = new mongoose.Schema(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +32,8 @@ const PushSubscriptionSchema = new mongoose.Schema(
 );
 
 // Notifications are sent per household, so look subscriptions up by household.
-PushSubscriptionSchema.index({ household: 1 });
+SubscriptionSchema.index({ household: 1 });
 
-module.exports = mongoose.model("PushSubscription", PushSubscriptionSchema);
+// Explicit collection name: the model used to be called PushSubscription, and existing
+// documents live in "pushsubscriptions". Without it, mongoose would use "subscriptions".
+module.exports = mongoose.model("Subscription", SubscriptionSchema, "pushsubscriptions");

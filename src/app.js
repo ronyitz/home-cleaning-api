@@ -5,7 +5,7 @@ const swaggerSpec = require("./swagger");
 const roomRoutes = require("./routes/roomRoutes");
 const authRoutes = require("./routes/authRoutes");
 const taskRoutes = require("./routes/taskRoutes");
-const pushRoutes = require("./routes/pushRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
 const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
@@ -38,7 +38,7 @@ if (RATE_LIMIT_ENABLED) {
 app.use("/api/rooms", authenticate, roomRoutes);
 app.use("/api/tasks", authenticate, taskRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/api/push", authenticate, pushRoutes);
+app.use("/api/push", authenticate, subscriptionRoutes);
 // Error handling middleware
 app.use(errorHandler);
 

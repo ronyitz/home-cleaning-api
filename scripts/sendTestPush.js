@@ -2,7 +2,7 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 const webpush = require("web-push");
-const PushSubscription = require("../src/models/PushSubscription");
+const Subscription = require("../src/models/Subscription");
 
 // Sends a test notification to every stored push subscription.
 // Removes subscriptions the push service reports as gone (404/410).
@@ -15,7 +15,7 @@ async function sendTestPush() {
 
   await mongoose.connect(process.env.MONGO_URI);
 
-  const subscriptions = await PushSubscription.find();
+  const subscriptions = await Subscription.find();
   console.log(`Found ${subscriptions.length} subscription(s).`);
 
   const payload = JSON.stringify({
