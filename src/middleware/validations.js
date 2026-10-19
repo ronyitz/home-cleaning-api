@@ -122,4 +122,15 @@ function validateHistoryQuery(req, res, next) {
   next();
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms, validateHistoryQuery };
+// POST /api/ai/command — the text is sent to a paid model, so its length is capped.
+const AI_TEXT_MAX_LENGTH = 500;
+
+function validateAiCommand(req, res, next) {
+  const { text } = req.body;
+  if (typeof text !== "string" || !text.trim() || text.length > AI_TEXT_MAX_LENGTH) {
+    throw new ApiError(422, `text is required and must be a non-empty string of up to ${AI_TEXT_MAX_LENGTH} characters`);
+  }
+  next();
+}
+
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms, validateHistoryQuery, validateAiCommand };
