@@ -85,7 +85,7 @@ async function login(data) {
             throw new ApiError(422, "password is required and must be a string");
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email }).select("+password");
 
         if (!user) {
             throw new ApiError(401, "Invalid email or password");

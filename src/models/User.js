@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false,
     },
     household: {
       type: mongoose.Schema.Types.ObjectId,
