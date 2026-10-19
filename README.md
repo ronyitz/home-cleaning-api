@@ -1,6 +1,6 @@
 # Home Cleaning API
 
-REST API for a household cleaning app. Members of a household share rooms and recurring cleaning tasks, mark tasks as done, and get push notifications: when someone else completes a task, and as a scheduled digest of upcoming tasks. Every completion is saved to a history of who did what and when.
+REST API for a household cleaning app. Members of a household share rooms and recurring cleaning tasks, mark tasks as done, and get push notifications: when someone else completes a task, and as a scheduled digest of upcoming tasks. Every completion is saved to a history of who did what and when. Members can also report a task in free text (for example, in Hebrew, "I cleaned the toilet in Agam's bathroom"), and an LLM finds the matching task.
 
 ## Live demo
 
@@ -22,6 +22,7 @@ REST API for a household cleaning app. Members of a household share rooms and re
 - **Background jobs:** BullMQ on Redis (retries with exponential backoff, scheduled jobs)
 - **Auth:** JWT, role-based authorization, household-level data isolation
 - **Notifications:** Web Push (VAPID)
+- **AI:** Claude API (Claude Haiku 5.5) with structured outputs, schema defined with Zod
 - **Docs:** Swagger / OpenAPI
 - **Testing:** Jest, Supertest, mongodb-memory-server (in-memory replica set)
 - **CI/CD:** GitHub Actions, deployed to Render after tests pass
@@ -52,7 +53,7 @@ docker compose down            # stop (data is kept in a volume)
 docker compose down -v         # stop and wipe the local database
 ```
 
-To enable push notifications locally, create a `.env` file with VAPID keys (see `.env.example`).
+To enable push notifications locally, create a `.env` file with VAPID keys (see `.env.example`). To use the AI command endpoint, add an `ANTHROPIC_API_KEY` to the same file.
 
 ## Run locally without Docker
 
@@ -85,6 +86,7 @@ All routes are under `/api`. Full documentation is available in Swagger at `/api
 | Tasks | list by household or room, create, update, complete, delete |
 | History | `GET /history/:household`: completions newest first, optional `?taskId=` and `?days=` filters |
 | Push | `GET /push/vapid-public-key`, `POST /push/subscribe`, `POST /push/unsubscribe` |
+| AI | `POST /ai/command`: finds the household tasks a free-text sentence says were completed |
 
 All routes except auth require a `Bearer` token. Users only see data from their own household.
 
@@ -100,6 +102,15 @@ A job scheduler adds a `daily-digest` job on a cron schedule (Israel time), whic
 
 The worker runs in the same process as the API, to fit Render's free tier.
 
+## How the AI command works
+
+`POST /ai/command` turns a free-text sentence into matching tasks. It only searches and never changes data:
+
+1. The server loads the household's tasks (from the user's token, never from the request) and sends them to Claude with the user's text. The text is capped at 500 characters and wrapped in tags, so the model treats it as data, not as instructions.
+2. Claude answers with structured output: JSON that must match a schema of task ids.
+3. The answer is treated as untrusted input. The server keeps only ids of the household's own tasks, which drops made-up ids and ids of other households.
+4. The client shows the matches for the user to confirm. Completing a task still goes through `PATCH /tasks/:taskId/complete`, with its usual authorization, transaction and notifications.
+
 ## Project structure
 
 ```
@@ -111,7 +122,7 @@ src/
   models/        Mongoose schemas
   queues/        BullMQ notification queue and job schedulers
   routes/        Express routers
-  services/      Business logic (auth, rooms, tasks, push subscriptions)
+  services/      Business logic (auth, rooms, tasks, history, push subscriptions, AI)
   utils/         ApiError, invite code generator
   workers/       BullMQ worker that processes notification jobs
   app.js         Express app setup
