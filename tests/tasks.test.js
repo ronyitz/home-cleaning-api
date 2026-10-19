@@ -11,6 +11,7 @@ const app = require("../src/app");
 const Room = require("../src/models/Room");
 const Task = require("../src/models/Task");
 const TaskCompletion = require("../src/models/TaskCompletion");
+const User = require("../src/models/User");
 
 const mongoose = require("mongoose");
 const { MongoMemoryReplSet } = require("mongodb-memory-server");
@@ -263,10 +264,38 @@ describe("PATCH /api/tasks/:taskId/complete", () => {
   });
 
   // Completing a task saves one TaskCompletion with the task's household, task and room names, and the user who did it.
-  it.todo("should create a TaskCompletion with the task details and the completing user");
+  it("should create a TaskCompletion with the task details and the completing user", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const room = await createRoom(admin.token);
+    const task = await createTask(admin.token, room._id);
+    const response = await request(app).patch(`/api/tasks/${task._id}/complete`).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(200);
+
+    const user = await User.findOne({ email: "admin@example.com" });
+    const completions = await TaskCompletion.find({ task: task._id });
+    expect(completions).toHaveLength(1);
+    expect(completions[0].taskName).toBe("Dishes");
+    expect(completions[0].roomName).toBe("Kitchen");
+    expect(completions[0].household.toString()).toBe(admin.household);
+    expect(completions[0].completedBy.toString()).toBe(user._id.toString());
+  });
 
   // TaskCompletion.create fails inside the transaction, so the task update is rolled back too.
-  it.todo("should return 500 and leave the task unchanged when saving the completion fails");
+  it("should return 500 and leave the task unchanged when saving the completion fails", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const room = await createRoom(admin.token);
+    // Last completed long ago, so a task update that was not rolled back would be visible.
+    const oldDate = new Date("2026-01-01T00:00:00.000Z");
+    const task = await request(app).post("/api/tasks").send({ name: "Dishes", room: room._id, frequency: 7, status: "good", lastCompletedAt: oldDate }).set("Authorization", `Bearer ${admin.token}`);
+
+    jest.spyOn(TaskCompletion, "create").mockRejectedValueOnce(new Error("database failure"));
+    const response = await request(app).patch(`/api/tasks/${task.body._id}/complete`).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(500);
+
+    const taskInDb = await Task.findById(task.body._id);
+    expect(taskInDb.lastCompletedAt.toISOString()).toBe(oldDate.toISOString());
+    expect(await TaskCompletion.countDocuments()).toBe(0);
+  });
 });
 
 describe("DELETE /api/tasks/:taskId", () => {

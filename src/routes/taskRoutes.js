@@ -1,6 +1,6 @@
 const express = require("express");
 const { createTask, getTasks, getTasksPerRoom,completeTask, deleteTask, updateTask } = require("../controllers/taskController");
-const { validateCreateTask, validateUpdateTask, validateObjectIdParam } = require("../middleware/validate");
+const { validateCreateTask, validateUpdateTask, validateObjectIdParam } = require("../middleware/validations");
 const { requireSameHousehold, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold} = require("../middleware/auth");
 
 const router = express.Router();

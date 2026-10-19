@@ -12,13 +12,13 @@ function validateRoom(req, res, next) {
     throw new ApiError(422, "name is required and must be a string");
   }
 
-if (!name.trim()) {
-  throw new ApiError(422, "name cannot be empty");
-}
+  if (!name.trim()) {
+    throw new ApiError(422, "name cannot be empty");
+  }
 
   if (!type || typeof type !== "string") {
-  throw new ApiError(422, "type is required and must be a string");
-  } 
+    throw new ApiError(422, "type is required and must be a string");
+  }
 
   if (type !== undefined && !ROOM_TYPE_VALUES.includes(type)) {
     throw new ApiError(422, `type must be one of: ${ROOM_TYPE_VALUES.join(", ")}`);
@@ -102,11 +102,24 @@ function validateObjectIdParam(paramName) {
 }
 
 function validateReorderRooms(req, res, next) {
-    const roomIds = req.body;
-    if (!roomIds || !Array.isArray(roomIds) || !roomIds.length || !roomIds.every((id) => mongoose.Types.ObjectId.isValid(id)) || new Set(roomIds).size !== roomIds.length) {
-        throw new ApiError(422, "array with valid ids should be sent");
-    }
-    next();
+  const roomIds = req.body;
+  if (!roomIds || !Array.isArray(roomIds) || !roomIds.length || !roomIds.every((id) => mongoose.Types.ObjectId.isValid(id)) || new Set(roomIds).size !== roomIds.length) {
+    throw new ApiError(422, "array with valid ids should be sent");
+  }
+  next();
 }
 
-module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms };
+// GET /api/history/:household — both query params are optional, but must be valid when sent.
+function validateHistoryQuery(req, res, next) {
+  const { taskId, days } = req.query;
+  if (taskId && !mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new ApiError(422, `taskId must be a valid id`);
+  }
+
+  if (days !== undefined && (days < 1 || !Number.isInteger(Number(days)))) {
+    throw new ApiError(422, `days must be a whole number >= 1`);
+  }
+  next();
+}
+
+module.exports = { validateRoom, validateCreateTask, validateUpdateTask, validateSubscription, validateDeleteSubscription, validateObjectIdParam, validateReorderRooms, validateHistoryQuery };

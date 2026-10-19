@@ -83,6 +83,7 @@ All routes are under `/api`. Full documentation is available in Swagger at `/api
 | Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/verify` |
 | Rooms | list, create, update, delete, reorder (create/update/delete are admin only) |
 | Tasks | list by household or room, create, update, complete, delete |
+| History | `GET /history/:household`: completions newest first, optional `?taskId=` and `?days=` filters |
 | Push | `GET /push/vapid-public-key`, `POST /push/subscribe`, `POST /push/unsubscribe` |
 
 All routes except auth require a `Bearer` token. Users only see data from their own household.
