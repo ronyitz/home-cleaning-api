@@ -46,7 +46,7 @@ function validateCreateTask(req, res, next) {
     throw new ApiError(422, `status must be one of: ${TASK_STATUS_VALUES.join(", ")}`);
   }
 
-  if (lastCompletedAt !== undefined && isNaN(new Date(lastCompletedAt).getTime())) {
+  if (lastCompletedAt !== undefined && (typeof lastCompletedAt !== "string" || isNaN(new Date(lastCompletedAt).getTime()))) {
     throw new ApiError(422, "lastCompletedAt must be a valid date");
   }
 
@@ -68,7 +68,7 @@ function validateUpdateTask(req, res, next) {
     throw new ApiError(422, `status must be one of: ${TASK_STATUS_VALUES.join(", ")}`);
   }
 
-  if (lastCompletedAt !== undefined && isNaN(new Date(lastCompletedAt).getTime())) {
+  if (lastCompletedAt !== undefined && (typeof lastCompletedAt !== "string" || isNaN(new Date(lastCompletedAt).getTime()))) {
     throw new ApiError(422, "lastCompletedAt must be a valid date");
   }
 
