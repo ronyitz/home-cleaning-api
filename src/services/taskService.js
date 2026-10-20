@@ -45,12 +45,14 @@ async function createTask({ name, room, frequency, status, lastCompletedAt, note
         daysUntilDue = 0;
     }
 
+    const completedAt = lastCompletedAt ? new Date(lastCompletedAt) : new Date();
+
     return Task.create({
         name,
         room,
         frequency,
-        lastCompletedAt,
-        nextDueAt: new Date(new Date(lastCompletedAt).getTime() + daysUntilDue * DAY_IN_MS),
+        lastCompletedAt : completedAt,
+        nextDueAt: new Date(completedAt.getTime() + daysUntilDue * DAY_IN_MS),
         note,
     });
 }

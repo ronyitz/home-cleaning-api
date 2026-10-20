@@ -28,7 +28,7 @@ function validateRoom(req, res, next) {
 }
 
 function validateCreateTask(req, res, next) {
-  const { name, room, frequency, status } = req.body;
+  const { name, room, frequency, lastCompletedAt, status } = req.body;
 
   if (!name || typeof name !== "string" || !name.trim()) {
     throw new ApiError(422, "name is required and must be a non-empty string");
@@ -46,11 +46,15 @@ function validateCreateTask(req, res, next) {
     throw new ApiError(422, `status must be one of: ${TASK_STATUS_VALUES.join(", ")}`);
   }
 
+  if (lastCompletedAt !== undefined && isNaN(new Date(lastCompletedAt).getTime())) {
+    throw new ApiError(422, "lastCompletedAt must be a valid date");
+  }
+
   next();
 }
 
 function validateUpdateTask(req, res, next) {
-  const { name, frequency, status } = req.body;
+  const { name, frequency, status, lastCompletedAt } = req.body;
 
   if (!name || typeof name !== "string" || !name.trim()) {
     throw new ApiError(422, "name is required and must be a non-empty string");
@@ -62,6 +66,10 @@ function validateUpdateTask(req, res, next) {
 
   if (status && !TASK_STATUS_VALUES.includes(status)) {
     throw new ApiError(422, `status must be one of: ${TASK_STATUS_VALUES.join(", ")}`);
+  }
+
+  if (lastCompletedAt !== undefined && isNaN(new Date(lastCompletedAt).getTime())) {
+    throw new ApiError(422, "lastCompletedAt must be a valid date");
   }
 
   next();
