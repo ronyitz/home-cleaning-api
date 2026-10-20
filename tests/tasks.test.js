@@ -57,10 +57,10 @@ async function createRoom(token, name = "Kitchen") {
 
 // Creates a task in the given room, due every 7 days and completed just now.
 // Returns the created task from the response.
-async function createTask(token, roomId, name = "Dishes") {
+async function createTask(token, roomId, name = "Dishes", lastCompletedAt) {
   const response = await request(app)
     .post("/api/tasks")
-    .send({ name, room: roomId, frequency: 7, status: "good", lastCompletedAt: new Date() })
+    .send({ name, room: roomId, frequency: 7, status: "good", lastCompletedAt: lastCompletedAt ? lastCompletedAt : new Date() })
     .set("Authorization", `Bearer ${token}`);
   return response.body;
 }
@@ -174,6 +174,36 @@ describe("POST /api/tasks", () => {
     expect(response2.body.error.message).toBe("duplicated, already exists");
     expect(await Task.countDocuments()).toBe(1);
   });
+
+  // Without lastCompletedAt the service starts from now, so nextDueAt is now + frequency days (status "good").
+  it("should return 201 and start from now when lastCompletedAt is not sent", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const room = await createRoom(admin.token);
+    const before = Date.now();
+    // Sent directly, not with the createTask helper, because the helper always sends lastCompletedAt.
+    const response = await request(app).post("/api/tasks").send({ name: "Dishes", room: room._id, frequency: 7, status: "good" }).set("Authorization", `Bearer ${admin.token}`);
+    expect(response.statusCode).toBe(201);
+
+    const DAY_IN_MS = 24 * 60 * 60 * 1000;
+    const completedAt = new Date(response.body.lastCompletedAt).getTime();
+    const nextDueAt = new Date(response.body.nextDueAt).getTime();
+    expect(completedAt).toBeGreaterThanOrEqual(before);
+    // Both dates come from the same "now", so the gap is exactly 7 days.
+    expect(nextDueAt - completedAt).toBe(7 * DAY_IN_MS);
+  });
+
+  // "abc" is not a date; null and a number are not date strings. None of them may create a task.
+  it("should return 422 when lastCompletedAt is not a valid date string", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const room = await createRoom(admin.token);
+
+    for (const lastCompletedAt of ["abc", null, 5]) {
+      const response = await request(app).post("/api/tasks").send({ name: "Dishes", room: room._id, frequency: 7, status: "good", lastCompletedAt }).set("Authorization", `Bearer ${admin.token}`);
+      expect(response.statusCode).toBe(422);
+      expect(response.body.error.message).toBe("lastCompletedAt must be a valid date");
+    }
+    expect(await Task.countDocuments()).toBe(0);
+  });
 });
 
 describe("PUT /api/tasks/:taskId", () => {
@@ -223,6 +253,23 @@ describe("PUT /api/tasks/:taskId", () => {
 
     const updated = await Task.findById(created.body._id);
     expect(updated.name).toBe("Floor");
+  });
+
+  // null would otherwise be saved and wipe the existing date.
+  it("should return 422 and keep the task unchanged when lastCompletedAt is not a valid date string", async () => {
+    const admin = await signupAdmin("admin@example.com", "MyHousehold");
+    const room = await createRoom(admin.token);
+    // An old date, so a value that was wrongly saved would be visible.
+    const created = await request(app).post("/api/tasks").send({ name: "Dishes", room: room._id, frequency: 7, status: "good", lastCompletedAt: "2026-01-01T00:00:00.000Z" }).set("Authorization", `Bearer ${admin.token}`);
+
+    for (const lastCompletedAt of ["abc", null, 5]) {
+      const response = await request(app).put(`/api/tasks/${created.body._id}`).send({ name: "Dishes", frequency: 7, lastCompletedAt }).set("Authorization", `Bearer ${admin.token}`);
+      expect(response.statusCode).toBe(422);
+      expect(response.body.error.message).toBe("lastCompletedAt must be a valid date");
+    }
+
+    const unchanged = await Task.findById(created.body._id);
+    expect(unchanged.lastCompletedAt.toISOString()).toBe("2026-01-01T00:00:00.000Z");
   });
 });
 
