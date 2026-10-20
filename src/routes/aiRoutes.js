@@ -1,6 +1,7 @@
 const express = require("express");
 const { postCommand } = require("../controllers/aiController");
 const { validateAiCommand } = require("../middleware/validations");
+const { rateLimiterRedisAIRequests } = require("../middleware/rateLimiterRedis");
 
 const router = express.Router();
 
@@ -28,7 +29,10 @@ const router = express.Router();
  *         description: "{ matches: [...] } - the matching tasks of the user's household (empty when none match)"
  *       422:
  *         description: text is missing, empty or too long
+ *       429:
+ *         description: Too many AI requests for this user (default 3 per hour). The Retry-After header says how many seconds to wait.
  */
-router.post("/command", validateAiCommand, postCommand);
+
+router.post("/command", validateAiCommand, rateLimiterRedisAIRequests, postCommand);
 
 module.exports = router;
