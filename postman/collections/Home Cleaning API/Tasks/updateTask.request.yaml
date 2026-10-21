@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{baseUrl}}/tasks/{{taskId}}"
+method: PUT
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"Rename task\",\r
+
+    \    \"frequency\": 3\r
+
+    }"
+order: 4000

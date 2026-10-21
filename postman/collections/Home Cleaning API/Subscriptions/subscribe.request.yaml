@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/push/subscribe"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/postman-test\",\r
+
+    \  \"keys\": {\r
+
+    \    \"p256dh\": \"test-p256dh\",\r
+
+    \    \"auth\": \"test-auth\"\r
+
+    \  }\r
+
+    }"
+order: 2000

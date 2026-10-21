@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{baseUrl}}/rooms"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \    \"name\": \"Test2 room\",\r
+
+    \    \"type\": \"kitchen\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "pm.environment.set(\"roomId\", pm.response.json()._id);\r\n"
+    language: text/javascript
+order: 3000

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/rooms/order"
+method: PUT
+body:
+  type: json
+  content: '["<id1>", "<id2>"]'
+order: 5000

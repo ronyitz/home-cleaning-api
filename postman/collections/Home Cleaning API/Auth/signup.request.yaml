@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/signup"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"{{$randomEmail}}\",\r
+
+    \  \"password\": \"password123\",\r
+
+    \  \"firstName\": \"Test\",\r
+
+    \  \"lastName\": \"User\",\r
+
+    \  \"groupName\": \"Test House\"\r
+
+    }"
+auth:
+  type: noauth
+order: 2000

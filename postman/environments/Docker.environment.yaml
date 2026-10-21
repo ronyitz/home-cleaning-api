@@ -1,0 +1,13 @@
+name: Docker
+values:
+  - key: baseUrl
+    value: 'http://localhost:3001/api'
+  - key: token
+    value: ''
+  - key: household
+    value: ''
+  - key: roomId
+    value: ''
+  - key: taskId
+    value: ''
+color: 240

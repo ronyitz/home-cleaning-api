@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/tasks"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"name\": \"Test task\",\r
+
+    \  \"room\": \"{{roomId}}\",\r
+
+    \  \"frequency\": 7,\r
+
+    \  \"status\": \"good\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: pm.environment.set("taskId", pm.response.json()._id)
+    language: text/javascript
+order: 3000

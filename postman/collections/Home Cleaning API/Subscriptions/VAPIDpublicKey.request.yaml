@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/push/vapid-public-key"
+method: GET
+order: 1000

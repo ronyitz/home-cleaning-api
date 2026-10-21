@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/rooms/{{household}}"
+method: GET
+order: 2000

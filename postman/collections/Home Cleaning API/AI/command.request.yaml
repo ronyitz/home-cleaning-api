@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{baseUrl}}/ai/command"
+method: POST
+body:
+  type: json
+  content: '{ "text": "שטפתי את הרצפה במטבח" }'
+order: 1000

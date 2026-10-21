@@ -1,0 +1,13 @@
+name: Production
+values:
+  - key: baseUrl
+    value: 'https://home-cleaning-api.onrender.com/api'
+  - key: token
+    value: ''
+  - key: household
+    value: ''
+  - key: roomId
+    value: ''
+  - key: taskId
+    value: ''
+color: 120

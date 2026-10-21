@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{baseUrl}}/tasks/{{household}}?maxNextDays=7"
+method: GET
+queryParams:
+  maxNextDays: "7"
+order: 1000

@@ -1,0 +1,4 @@
+$kind: http-request
+url: "{{baseUrl}}/history/{{household}}"
+method: GET
+order: 1000

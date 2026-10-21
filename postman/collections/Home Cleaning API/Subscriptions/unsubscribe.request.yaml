@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/push/unsubscribe"
+method: POST
+body:
+  type: json
+  content: "{\r
+
+    \  \"endpoint\": \"https://fcm.googleapis.com/fcm/send/postman-test\"\r
+
+    }"
+order: 3000
