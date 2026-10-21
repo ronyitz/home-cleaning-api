@@ -1,7 +1,7 @@
 name: Production
 values:
   - key: baseUrl
-    value: 'https://home-cleaning-api.onrender.com/api'
+    value: ''
   - key: token
     value: ''
   - key: household

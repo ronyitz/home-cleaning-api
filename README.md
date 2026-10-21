@@ -23,7 +23,7 @@ REST API for a household cleaning app. Members of a household share rooms and re
 - **Auth:** JWT, role-based authorization, household-level data isolation
 - **Notifications:** Web Push (VAPID)
 - **AI:** Claude API (Claude Haiku 5.5) with structured outputs, schema defined with Zod
-- **Docs:** Swagger / OpenAPI
+- **Docs:** Swagger / OpenAPI, Postman collection
 - **Testing:** Jest, Supertest, mongodb-memory-server (in-memory replica set)
 - **CI/CD:** GitHub Actions, deployed to Render after tests pass
 - **Local environment:** Docker, Docker Compose
@@ -90,6 +90,18 @@ All routes are under `/api`. Full documentation is available in Swagger at `/api
 
 All routes except auth require a `Bearer` token. Users only see data from their own household.
 
+## Try the API with Postman
+
+The repo includes a Postman collection with a request for every route, stored as files in [`postman/`](postman/).
+
+1. Start the API with Docker (`docker compose up -d`).
+2. In Postman, open this project folder and select the **Docker** environment (`http://localhost:3001/api`).
+3. Send **Auth → signup** to create a test user (it generates a random email). Note the email and password it used (the request body, or the Postman Console).
+4. Add them to your Postman **Local Vault** as `email` and `password`. Credentials live only in the vault, never in the collection files.
+5. Send **Auth → login**. Its script saves the token and household id to the environment, and every other request uses them automatically. Creating a room or a task saves its id, so update, complete and delete requests work on it.
+
+The **Production** environment is included without its URL on purpose. **AI → command** calls a paid model and is limited to 3 requests per hour per user.
+
 ## How notifications work
 
 Push notifications are sent through a BullMQ job queue, not inside the HTTP request:
@@ -128,5 +140,6 @@ src/
   app.js         Express app setup
   server.js      Entry point (connects to MongoDB and Redis, starts the worker and the server)
 tests/           Jest + Supertest tests
+postman/         Postman collection (one file per request) and environments
 scripts/         One-off maintenance scripts
 ```
