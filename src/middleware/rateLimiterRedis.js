@@ -43,4 +43,4 @@ const rateLimiterRedis = createRateLimiter({ prefix: "ratelimit:global", windowM
 // Stricter limiter for the paid AI endpoint, per user.
 const rateLimiterRedisAIRequests = createRateLimiter({ prefix: "ratelimit:ai", windowMs: AI_WINDOW_MS, max: AI_MAX_REQUESTS, keyform: (req) => req.userId, message: "Too many AI requests" });
 
-module.exports = { rateLimiterRedis, rateLimiterRedisAIRequests };
+module.exports = { rateLimiterRedis, rateLimiterRedisAIRequests, createRateLimiter };
