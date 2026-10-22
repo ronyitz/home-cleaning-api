@@ -337,6 +337,8 @@ describe("PUT /api/rooms/:id", () => {
     expect(response.statusCode).toBe(201);
     const response2 = await request(app).put("/api/rooms/" + response.body._id).send({ name: "Living Room", type: "living_room" }).set("Authorization", `Bearer ${admin.token}`);
     expect(response2.statusCode).toBe(200);
+    expect(response2.body.name).toBe("Living Room");
+    expect(response2.body.type).toBe("living_room");
     const room = await Room.findById(response.body._id);
     expect(room.name).toBe("Living Room");
     expect(room.type).toBe("living_room");

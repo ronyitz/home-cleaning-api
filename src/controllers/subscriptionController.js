@@ -7,7 +7,7 @@ function getPublicKey(req, res) {
 }
 
 async function postSubscribe(req, res){
-    const pushSubscription = await Subscription.findOneAndUpdate({ endpoint: req.body.endpoint},{keys: req.body.keys, user: req.userId, household: req.householdId },  { upsert: true, new: true, runValidators: true } );
+    const pushSubscription = await Subscription.findOneAndUpdate({ endpoint: req.body.endpoint},{keys: req.body.keys, user: req.userId, household: req.householdId },  { upsert: true, returnDocument: "after", runValidators: true } );
     res.status(200).json(pushSubscription);
 }
 

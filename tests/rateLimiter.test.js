@@ -129,7 +129,5 @@ describe("createRateLimiter", () => {
 
     expect(next).toHaveBeenCalledTimes(1);
     expect(redisClient.incr).not.toHaveBeenCalled();
-
-    delete process.env.RATE_LIMIT_ENABLED;
   });
 });

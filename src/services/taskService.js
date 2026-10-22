@@ -72,7 +72,7 @@ async function updateTask(taskId, { name, frequency, lastCompletedAt, note }) {
     return Task.findByIdAndUpdate(
         taskId,
         { name, frequency, lastCompletedAt, nextDueAt, note },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
 }
 

@@ -17,7 +17,7 @@ async function updateRoom(roomId, { name, type }) {
     const room = await Room.findByIdAndUpdate(
         roomId,
         { name, type },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     );
     if (!room) {
         throw new ApiError(404, "Room not found");
