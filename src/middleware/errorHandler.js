@@ -1,3 +1,5 @@
+const logger = require("../config/logger");
+
 function sendError(res, status, message) {
   res.status(status).json({
     success: false,
@@ -23,7 +25,7 @@ function errorHandler(err, req, res, next) {
   }
 
   // Unexpected error
-  console.error(err);
+  logger.error({ err }, "unhandled error");
 
   return sendError(res, 500, "שגיאה בשרת");
 }

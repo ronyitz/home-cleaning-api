@@ -2,9 +2,11 @@ require("dotenv").config();
 
 const REQUIRED = ["MONGO_URI", "REDIS_URL", "JWT_SECRET"];
 
+const logger = require("./config/logger");
+
 const missing = REQUIRED.filter((name) => !process.env[name]);
 if (missing.length > 0) {
-  console.error(`Missing required environment variables: ${missing.join(", ")}`);
+  logger.error({ missing }, "missing required environment variables");
   process.exit(1);
 }
 
@@ -19,20 +21,20 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("Connected to MongoDB");
+    logger.info("connected to MongoDB");
 
     await redisClient.connect();
-    console.log("Connected to Redis");
+    logger.info("connected to Redis");
 
     await registerSchedulers();
     startNotificationWorker();
-    console.log("Notification worker started");
+    logger.info("notification worker started");
 
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info({ port: PORT }, "server running");
     });
   } catch (error) {
-    console.error("Server startup error:", error);
+    logger.error({ err: error }, "server startup error");
     process.exit(1);
   }
 }

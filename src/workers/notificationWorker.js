@@ -3,6 +3,7 @@ const { connection, notificationQueue } = require("../queues/notificationQueue")
 const Subscription = require("../models/Subscription");
 const { getTasks } = require("../services/taskService");
 const { notifySubscription } = require("../services/subscriptionService");
+const logger = require("../config/logger");
 
 
 function startNotificationWorker() {
@@ -39,7 +40,7 @@ function startNotificationWorker() {
             )
         }
     }, { connection });
-    worker.on("failed", (job, error) => console.log(`Job ${job.id} failed: ${error.message}`));
+    worker.on("failed", (job, error) => logger.error({ jobId: job?.id, jobName: job?.name, attemptsMade: job?.attemptsMade, err: error }, "job failed"));
     return worker;
 }
 module.exports = { startNotificationWorker };

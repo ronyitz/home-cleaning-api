@@ -1,6 +1,7 @@
 const webpush = require("web-push");
 const { UnrecoverableError } = require("bullmq");
 const Subscription = require("../models/Subscription");
+const logger = require("../config/logger");
 
 // Sends a notification to one push subscription (one device).
 // Skips it if the subscription was removed meanwhile (e.g. the user logged out).
@@ -37,13 +38,13 @@ async function notifySubscription(subscriptionId, data) {
         },
       }
     );
-    console.log(`Sent (${result.statusCode}) to user ${subscription.user}: ${shortEndpoint}...`);
+    logger.info({ userId: subscription.user, statusCode: result.statusCode, endpoint: shortEndpoint }, "push sent");
   } catch (error) {
     if (error.statusCode === 404 || error.statusCode === 410) {
       await subscription.deleteOne();
-      console.log(`Gone (${error.statusCode}), deleted subscription of user ${subscription.user}: ${shortEndpoint}...`);
+      logger.info({ userId: subscription.user, statusCode: error.statusCode, endpoint: shortEndpoint }, "push subscription gone, deleted");
     } else {
-      console.log(`Failed (${error.statusCode ?? "no status"}) for user ${subscription.user}: ${shortEndpoint}... ${error.body ?? error.message}`);
+      logger.warn({ userId: subscription.user, statusCode: error.statusCode, endpoint: shortEndpoint, body: error.body, err: error }, "push failed");
       if ([400, 401, 403, 413].includes(error.statusCode)) {
         throw new UnrecoverableError(`Push rejected (${error.statusCode}): ${error.body ?? error.message}`);
       }

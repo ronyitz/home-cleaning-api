@@ -10,6 +10,7 @@ const aiRoutes = require("./routes/aiRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
 const {authenticate} = require("./middleware/auth");
 const errorHandler = require("./middleware/errorHandler");
+const logger = require("./config/logger");
 const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
 
  const app = express();
@@ -28,7 +29,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // GET /api/health — keep-alive ping target; uptime shows whether the server restarted since the last ping.
 app.get("/api/health", (req, res) => {
   const uptimeSeconds = Math.round(process.uptime());
-  console.log(`Health check — uptime: ${uptimeSeconds}s`);
+  logger.info({ uptimeSeconds }, "health check");
   res.json({ status: "ok", uptimeSeconds });
 });
 
