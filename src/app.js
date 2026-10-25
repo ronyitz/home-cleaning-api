@@ -9,12 +9,12 @@ const taskRoutes = require("./routes/taskRoutes");
 const historyRoutes = require("./routes/historyRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
-const { authenticate } = require("./middleware/auth");
+const { authenticate } = require("./middleware/authentication");
 const errorHandler = require("./middleware/errorHandler");
 const ApiError = require("./utils/ApiError");
 const logger = require("./config/logger");
 const pinoHttp = require("pino-http");
-const { rateLimiterRedis } = require("./middleware/rateLimiterRedis");
+const { globalRateLimiter } = require("./middleware/rateLimit");
 
 const app = express();
 
@@ -66,7 +66,7 @@ app.get("/api/health", (req, res) => {
 
 const RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED !== "false";
 if (RATE_LIMIT_ENABLED) {
-  app.use(rateLimiterRedis);
+  app.use(globalRateLimiter);
 }
 
 app.use("/api/history", authenticate, historyRoutes);

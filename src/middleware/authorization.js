@@ -1,30 +1,9 @@
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const Room = require("../models/Room");
 const Task = require("../models/Task");
-
-
 const ApiError = require("../utils/ApiError");
 
-// Used in: app.js (global auth middleware, applied to /api/rooms, /api/tasks and /api/push)
-function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new ApiError(401, "No token provided");
-  }
-
-  const token = authHeader.split(" ")[1];
-  let decoded;
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET);
-  } catch (error) {
-    throw new ApiError(401, "Invalid or expired token");
-  }
-  req.householdId = decoded.householdId;
-  req.userId = decoded.userId;
-  req.log = req.log.child({ userId: req.userId });
-  next();
-}
+// What are you allowed to do? These run after authenticate (authentication.js), so the user is known -> 403.
 
 // Used in: roomRoutes.js (POST /, PUT /:id, DELETE /:id)
 async function requireAdmin(req, res, next) {
@@ -81,4 +60,4 @@ async function requireTaskHousehold(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, requireAdmin, requireSameHousehold, requireHouseholdForRoom, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold };
+module.exports = { requireAdmin, requireSameHousehold, requireHouseholdForRoom, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold };

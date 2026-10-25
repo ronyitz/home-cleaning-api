@@ -1,6 +1,6 @@
 const express = require("express");
 const { getPublicKey, postSubscribe, postUnsubscribe } = require("../controllers/subscriptionController");
-const { validateSubscription, validateDeleteSubscription } = require("../middleware/validations");
+const { validateSubscription, validateDeleteSubscription } = require("../middleware/validation");
 
 const router = express.Router();
 

@@ -1,7 +1,7 @@
 const express = require("express");
 const { postCommand } = require("../controllers/aiController");
-const { validateAiCommand } = require("../middleware/validations");
-const { rateLimiterRedisAIRequests } = require("../middleware/rateLimiterRedis");
+const { validateAiCommand } = require("../middleware/validation");
+const { aiRateLimiter } = require("../middleware/rateLimit");
 
 const router = express.Router();
 
@@ -33,6 +33,6 @@ const router = express.Router();
  *         description: Too many AI requests for this user (default 3 per hour). The Retry-After header says how many seconds to wait.
  */
 
-router.post("/command", validateAiCommand, rateLimiterRedisAIRequests, postCommand);
+router.post("/command", validateAiCommand, aiRateLimiter, postCommand);
 
 module.exports = router;

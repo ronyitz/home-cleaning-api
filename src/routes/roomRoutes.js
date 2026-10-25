@@ -1,7 +1,7 @@
 const express = require("express");
 const { createRoom, getRooms, getRoomTypes, deleteRoom, updateRoom, reorderRooms } = require("../controllers/roomController");
-const { validateRoom, validateObjectIdParam, validateReorderRooms } = require("../middleware/validations");
-const {requireAdmin, requireSameHousehold, requireHouseholdForRoom} = require("../middleware/auth");
+const { validateRoom, validateObjectIdParam, validateReorderRooms } = require("../middleware/validation");
+const {requireAdmin, requireSameHousehold, requireHouseholdForRoom} = require("../middleware/authorization");
 
 const router = express.Router();
 

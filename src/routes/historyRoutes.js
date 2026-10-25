@@ -1,7 +1,7 @@
 const express = require("express");
 const { getHistory } = require("../controllers/historyController");
-const { requireSameHousehold } = require("../middleware/auth");
-const { validateHistoryQuery } = require("../middleware/validations");
+const { requireSameHousehold } = require("../middleware/authorization");
+const { validateHistoryQuery } = require("../middleware/validation");
 
 const router = express.Router();
 

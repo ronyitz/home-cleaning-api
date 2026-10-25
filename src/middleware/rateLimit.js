@@ -39,8 +39,8 @@ function getClientIp(req) {
 }
 
 // General limiter for the whole API, per IP.
-const rateLimiterRedis = createRateLimiter({ prefix: "ratelimit:global", windowMs: WINDOW_MS, max: MAX_REQUESTS, keyform: (req) => getClientIp(req), message: "Too many requests" });
+const globalRateLimiter = createRateLimiter({ prefix: "ratelimit:global", windowMs: WINDOW_MS, max: MAX_REQUESTS, keyform: (req) => getClientIp(req), message: "Too many requests" });
 // Stricter limiter for the paid AI endpoint, per user.
-const rateLimiterRedisAIRequests = createRateLimiter({ prefix: "ratelimit:ai", windowMs: AI_WINDOW_MS, max: AI_MAX_REQUESTS, keyform: (req) => req.userId, message: "Too many AI requests" });
+const aiRateLimiter = createRateLimiter({ prefix: "ratelimit:ai", windowMs: AI_WINDOW_MS, max: AI_MAX_REQUESTS, keyform: (req) => req.userId, message: "Too many AI requests" });
 
-module.exports = { rateLimiterRedis, rateLimiterRedisAIRequests, createRateLimiter };
+module.exports = { globalRateLimiter, aiRateLimiter, createRateLimiter };

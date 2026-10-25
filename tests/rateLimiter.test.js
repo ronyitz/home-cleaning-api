@@ -40,7 +40,7 @@ jest.mock("../src/config/redis", () => {
 });
 
 const redisClient = require("../src/config/redis");
-const { createRateLimiter } = require("../src/middleware/rateLimiterRedis");
+const { createRateLimiter } = require("../src/middleware/rateLimit");
 
 afterEach(() => {
   redisClient.__reset();

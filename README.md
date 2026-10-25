@@ -23,6 +23,7 @@ REST API for a household cleaning app. Members of a household share rooms and re
 - **Auth:** JWT, role-based authorization, household-level data isolation
 - **Notifications:** Web Push (VAPID)
 - **AI:** Claude API (Claude Haiku 5.5) with structured outputs, schema defined with Zod
+- **Logging:** pino structured JSON logs, one line per request (pino-http) with a request id
 - **Docs:** Swagger / OpenAPI, Postman collection
 - **Testing:** Jest, Supertest, mongodb-memory-server (in-memory replica set)
 - **CI/CD:** GitHub Actions, deployed to Render after tests pass
@@ -48,7 +49,8 @@ Useful commands:
 
 ```bash
 docker compose up --watch      # live reload: code changes in src/ restart the API
-docker compose logs -f api     # follow API logs
+docker compose logs -f api     # follow API logs (JSON)
+docker compose logs -f --no-log-prefix api | npx pino-pretty -c   # same, human-readable
 docker compose down            # stop (data is kept in a volume)
 docker compose down -v         # stop and wipe the local database
 ```
@@ -90,6 +92,8 @@ All routes are under `/api`. Full documentation is available in Swagger at `/api
 
 All routes except auth require a `Bearer` token. Users only see data from their own household.
 
+Errors always have the same shape: `{ "success": false, "error": { "status": 404, "message": "Room not found" } }`. Every response includes an `X-Request-Id` header. Include it when reporting a problem, so the exact request can be found in the logs.
+
 ## Try the API with Postman
 
 The repo includes a Postman collection with a request for every route, stored as files in [`postman/`](postman/).
@@ -123,11 +127,21 @@ The worker runs in the same process as the API, to fit Render's free tier.
 3. The answer is treated as untrusted input. The server keeps only ids of the household's own tasks, which drops made-up ids and ids of other households.
 4. The client shows the matches for the user to confirm. Completing a task still goes through `PATCH /tasks/:taskId/complete`, with its usual authorization, transaction and notifications.
 
+## Logging and errors
+
+Logs are structured JSON (pino), so a log service can search and filter them by field and level:
+
+1. Every request writes one line with its method, URL, status, response time, request id and user id. Health-check pings are skipped.
+2. Every error raised during a request goes through one error handler. Expected rejections (4xx: validation, permissions, unknown route) are logged as `warn` with the reason. Unexpected errors are logged as `error` with the stack trace, and the client gets a generic 500.
+3. Values the user sent are never logged. A duplicate email or an invalid field is logged by field name only.
+4. When the AI provider fails, the client gets a 502, so a problem with the provider (for example, its API key) never looks like the user's own login has expired.
+5. Crashes outside a request (an uncaught exception or an unhandled promise rejection) are logged as `fatal` before the process exits, and Render restarts it.
+
 ## Project structure
 
 ```
 src/
-  config/        Redis client
+  config/        Redis client, logger
   constants/     Shared constants (room types)
   controllers/   Request handlers (thin: read the request, call a service)
   middleware/    Auth, validation, rate limiting, error handling
