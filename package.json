@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.9.5",
     "pino": "^10.4.0",
+    "pino-http": "^11.0.0",
     "redis": "^6.2.1",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",

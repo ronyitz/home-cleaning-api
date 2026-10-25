@@ -15,6 +15,8 @@ const pino = require("pino");
 // LOG_LEVEL shows that level and everything above it (info → 30, 40, 50, 60).
 const logger = pino({
   level: process.env.NODE_ENV === "test" ? "silent" : process.env.LOG_LEVEL || "info",
+  // "time":"2026-10-22T10:25:10.456Z" (UTC) instead of a Unix timestamp in ms.
+  timestamp: pino.stdTimeFunctions.isoTime,
 });
 
 module.exports = logger;

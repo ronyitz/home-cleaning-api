@@ -4,6 +4,19 @@ const REQUIRED = ["MONGO_URI", "REDIS_URL", "JWT_SECRET"];
 
 const logger = require("./config/logger");
 
+// Last line of defense for errors nobody caught (outside a request, e.g. in the worker or a callback).
+// Without these, Node prints a plain stack (not JSON) and dies. Log it as fatal, then exit -
+// the process may be in a broken state, so let Render restart it clean.
+process.on("uncaughtException", (err) => {
+  logger.fatal({ err }, "uncaught exception");
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.fatal({ err: reason }, "unhandled rejection");
+  process.exit(1);
+});
+
 const missing = REQUIRED.filter((name) => !process.env[name]);
 if (missing.length > 0) {
   logger.error({ missing }, "missing required environment variables");

@@ -2,6 +2,8 @@ const Anthropic = require("@anthropic-ai/sdk");
 const { z } = require("zod");
 const { zodOutputFormat } = require("@anthropic-ai/sdk/helpers/zod");
 const { getTasks } = require("./taskService");
+const ApiError = require("../utils/ApiError");
+const logger = require("../config/logger");
 
 const MODEL = "claude-haiku-5-5";
 
@@ -40,13 +42,24 @@ async function matchTasks(householdId, text) {
 
     const userMessage = "Household tasks:\n" + tasksMapped +"\n\nUser wrote:\n<user_text>\n"+text+"\n</user_text>";
 
-    const response = await getClient().messages.parse({
-        model: MODEL,
-        max_tokens: 1000,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMessage }],
-        output_config: { format: zodOutputFormat(MatchSchema) },
-    });
+    let response;
+    try {
+        response = await getClient().messages.parse({
+            model: MODEL,
+            max_tokens: 1000,
+            system: SYSTEM_PROMPT,
+            messages: [{ role: "user", content: userMessage }],
+            output_config: { format: zodOutputFormat(MatchSchema) },
+        });
+    } catch (error) {
+        // Only Anthropic's errors (bad API key, overloaded, rate limited...) - a bug in our code still goes to the 500 branch.
+        // Their status describes our account, not the user's request: a 401 here must not look like an expired login.
+        if (error instanceof Anthropic.APIError) {
+            logger.error({ err: error }, "anthropic request failed");
+            throw new ApiError(502, "שירות ה-AI לא זמין כרגע");
+        }
+        throw error;
+    }
 
     // parsed_output is null when the answer was cut off or refused.
     if (!response.parsed_output) {

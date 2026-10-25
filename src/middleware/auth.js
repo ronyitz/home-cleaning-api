@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const Household = require("../models/Household");
 const Room = require("../models/Room");
 const Task = require("../models/Task");
 
@@ -11,19 +10,20 @@ const ApiError = require("../utils/ApiError");
 function authenticate(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "No token provided" });
+    throw new ApiError(401, "No token provided");
   }
 
   const token = authHeader.split(" ")[1];
-
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.householdId = decoded.householdId;
-    req.userId = decoded.userId;
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
-    res.status(401).json({ message: "Invalid or expired token" });
+    throw new ApiError(401, "Invalid or expired token");
   }
+  req.householdId = decoded.householdId;
+  req.userId = decoded.userId;
+  req.log = req.log.child({ userId: req.userId });
+  next();
 }
 
 // Used in: roomRoutes.js (POST /, PUT /:id, DELETE /:id)
@@ -40,7 +40,7 @@ async function requireAdmin(req, res, next) {
 async function requireSameHousehold(req, res, next) {
   // The household from the JWT
   const householdId = req.householdId;
-  if(householdId !== req.params.household){
+  if (householdId !== req.params.household) {
     throw new ApiError(403, "Unauthorized");
   }
   next();
@@ -81,4 +81,4 @@ async function requireTaskHousehold(req, res, next) {
   next();
 }
 
-module.exports = { authenticate, requireAdmin, requireSameHousehold, requireHouseholdForRoom, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold};
+module.exports = { authenticate, requireAdmin, requireSameHousehold, requireHouseholdForRoom, requireHouseholdRoomForCreateTask, requireHouseholdRoomGetTasks, requireTaskHousehold };
